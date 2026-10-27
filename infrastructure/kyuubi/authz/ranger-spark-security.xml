@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Kyuubi Spark AuthZ plugin -> Apache Ranger plugin configuration. Lives in $SPARK_HOME/conf of every Kyuubi engine.
+  [LOCAL]  ranger.plugin.spark.policy.rest.url points at ranger-admin-stub (a clearly labelled simulation of Ranger Admin
+           that serves infrastructure/kyuubi/authz/policies.json). The plugin, its policy evaluation, row filters and masks
+           are the real Ranger code shipped inside kyuubi-spark-authz-shaded.
+  [PROD]   ranger.plugin.spark.policy.rest.url = https://ranger-admin.<corp>:6182, policies managed in the Ranger UI,
+           service.name = the Ranger HIVE-type service created for the lakehouse, audit to Solr/HDFS enabled.
+-->
+<configuration>
+  <property>
+    <name>ranger.plugin.spark.service.name</name>
+    <value>lakehouse_hive</value>
+  </property>
+  <property>
+    <name>ranger.plugin.spark.policy.rest.url</name>
+    <value>http://ranger-admin-stub:6080</value>
+  </property>
+  <property>
+    <name>ranger.plugin.spark.policy.source.impl</name>
+    <value>org.apache.ranger.admin.client.RangerAdminRESTClient</value>
+  </property>
+  <property>
+    <name>ranger.plugin.spark.policy.cache.dir</name>
+    <value>/opt/kyuubi/policycache</value>
+  </property>
+  <property>
+    <name>ranger.plugin.spark.policy.pollIntervalMs</name>
+    <value>30000</value>
+  </property>
+  <property>
+    <name>ranger.plugin.spark.policy.rest.client.connection.timeoutMs</name>
+    <value>5000</value>
+  </property>
+  <property>
+    <name>ranger.plugin.spark.policy.rest.client.read.timeoutMs</name>
+    <value>10000</value>
+  </property>
+  <property>
+    <name>ranger.plugin.spark.authorize.in.single.call</name>
+    <value>true</value>
+  </property>
+</configuration>

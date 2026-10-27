@@ -1,0 +1,1306 @@
+{
+ "summary": {
+  "engine": "trino",
+  "concurrency": 5,
+  "iterations": 2,
+  "label": "",
+  "started_utc": "2026-10-26T07:11:40.096404+00:00",
+  "wall_s": 31.46,
+  "queries_total": 170,
+  "queries_ok": 170,
+  "queries_failed": 0,
+  "throughput_qps": 5.404,
+  "latency_p50_s": 0.5417234897613525,
+  "latency_p95_s": 2.224726438522339,
+  "latency_max_s": 5.007246017456055,
+  "latency_mean_s": 0.9105813685585471,
+  "connect_p95_s": 0.4313938617706299,
+  "connect_failed": 0,
+  "per_query": {
+   "q1_daily_revenue_by_region_gold": {
+    "n": 30,
+    "errors": 0,
+    "p50_s": 0.6836953163146973,
+    "p95_s": 1.2035200595855713,
+    "max_s": 1.2172906398773193
+   },
+   "q2_top_categories_month_gold": {
+    "n": 30,
+    "errors": 0,
+    "p50_s": 0.6238605976104736,
+    "p95_s": 2.224726438522339,
+    "max_s": 2.257896661758423
+   },
+   "q4_funnel_conversion_gold": {
+    "n": 20,
+    "errors": 0,
+    "p50_s": 1.5942108631134033,
+    "p95_s": 2.3868534564971924,
+    "max_s": 2.5381417274475098
+   },
+   "q7_customer_monthly_top_spenders_gold": {
+    "n": 20,
+    "errors": 0,
+    "p50_s": 0.4910452365875244,
+    "p95_s": 1.996664047241211,
+    "max_s": 2.2204959392547607
+   },
+   "q8_store_lookup_point_query": {
+    "n": 30,
+    "errors": 0,
+    "p50_s": 0.4778413772583008,
+    "p95_s": 0.6992061138153076,
+    "max_s": 0.8988592624664307
+   },
+   "q6_current_state_customer_after_cdc": {
+    "n": 20,
+    "errors": 0,
+    "p50_s": 0.4540524482727051,
+    "p95_s": 0.735727071762085,
+    "max_s": 0.7398529052734375
+   },
+   "q3_fact_join_dimension_silver": {
+    "n": 10,
+    "errors": 0,
+    "p50_s": 2.1512386798858643,
+    "p95_s": 5.007246017456055,
+    "max_s": 5.007246017456055
+   },
+   "q5_events_last_7_days_silver": {
+    "n": 10,
+    "errors": 0,
+    "p50_s": 0.6180264949798584,
+    "p95_s": 1.5478777885437012,
+    "max_s": 1.5478777885437012
+   }
+  },
+  "errors": []
+ },
+ "results": [
+  {
+   "worker": 4,
+   "query": "connect",
+   "ok": true,
+   "latency_s": 0.39467644691467285,
+   "rows": 0
+  },
+  {
+   "worker": 0,
+   "query": "connect",
+   "ok": true,
+   "latency_s": 0.40998053550720215,
+   "rows": 0
+  },
+  {
+   "worker": 3,
+   "query": "connect",
+   "ok": true,
+   "latency_s": 0.41721653938293457,
+   "rows": 0
+  },
+  {
+   "worker": 1,
+   "query": "connect",
+   "ok": true,
+   "latency_s": 0.4253215789794922,
+   "rows": 0
+  },
+  {
+   "worker": 2,
+   "query": "connect",
+   "ok": true,
+   "latency_s": 0.4313938617706299,
+   "rows": 0
+  },
+  {
+   "worker": 4,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 1.037433385848999,
+   "rows": 140
+  },
+  {
+   "worker": 0,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 1.162975788116455,
+   "rows": 140
+  },
+  {
+   "worker": 2,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 1.157224416732788,
+   "rows": 140
+  },
+  {
+   "worker": 1,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 1.2035200595855713,
+   "rows": 140
+  },
+  {
+   "worker": 3,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 1.2172906398773193,
+   "rows": 140
+  },
+  {
+   "worker": 4,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.8332877159118652,
+   "rows": 140
+  },
+  {
+   "worker": 3,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.8439631462097168,
+   "rows": 140
+  },
+  {
+   "worker": 0,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 1.043267011642456,
+   "rows": 140
+  },
+  {
+   "worker": 2,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 1.0546393394470215,
+   "rows": 140
+  },
+  {
+   "worker": 1,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 1.2021205425262451,
+   "rows": 140
+  },
+  {
+   "worker": 4,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.829601526260376,
+   "rows": 140
+  },
+  {
+   "worker": 2,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.5635640621185303,
+   "rows": 140
+  },
+  {
+   "worker": 3,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.7679054737091064,
+   "rows": 140
+  },
+  {
+   "worker": 0,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.6836953163146973,
+   "rows": 140
+  },
+  {
+   "worker": 1,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.5409660339355469,
+   "rows": 140
+  },
+  {
+   "worker": 4,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.48656439781188965,
+   "rows": 10
+  },
+  {
+   "worker": 2,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.39036130905151367,
+   "rows": 10
+  },
+  {
+   "worker": 0,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.43945980072021484,
+   "rows": 10
+  },
+  {
+   "worker": 3,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.6238605976104736,
+   "rows": 10
+  },
+  {
+   "worker": 1,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.6297876834869385,
+   "rows": 10
+  },
+  {
+   "worker": 2,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.5417234897613525,
+   "rows": 10
+  },
+  {
+   "worker": 4,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.771700382232666,
+   "rows": 10
+  },
+  {
+   "worker": 0,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 1.188920021057129,
+   "rows": 10
+  },
+  {
+   "worker": 3,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 1.0924649238586426,
+   "rows": 10
+  },
+  {
+   "worker": 1,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 2.0929348468780518,
+   "rows": 10
+  },
+  {
+   "worker": 2,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 2.147617816925049,
+   "rows": 10
+  },
+  {
+   "worker": 4,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 2.1139822006225586,
+   "rows": 10
+  },
+  {
+   "worker": 0,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 2.224726438522339,
+   "rows": 10
+  },
+  {
+   "worker": 3,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 2.257896661758423,
+   "rows": 10
+  },
+  {
+   "worker": 1,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 1.7064321041107178,
+   "rows": 10
+  },
+  {
+   "worker": 2,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 2.3868534564971924,
+   "rows": 6
+  },
+  {
+   "worker": 4,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 2.2200827598571777,
+   "rows": 6
+  },
+  {
+   "worker": 0,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 1.7853245735168457,
+   "rows": 6
+  },
+  {
+   "worker": 3,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 1.7445240020751953,
+   "rows": 6
+  },
+  {
+   "worker": 1,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 1.839792013168335,
+   "rows": 6
+  },
+  {
+   "worker": 2,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 1.5942108631134033,
+   "rows": 6
+  },
+  {
+   "worker": 4,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 1.6664910316467285,
+   "rows": 6
+  },
+  {
+   "worker": 0,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 1.7570080757141113,
+   "rows": 6
+  },
+  {
+   "worker": 3,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 1.7377550601959229,
+   "rows": 6
+  },
+  {
+   "worker": 1,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 2.5381417274475098,
+   "rows": 6
+  },
+  {
+   "worker": 2,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 1.996664047241211,
+   "rows": 20
+  },
+  {
+   "worker": 3,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 1.8171658515930176,
+   "rows": 20
+  },
+  {
+   "worker": 0,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 1.8632376194000244,
+   "rows": 20
+  },
+  {
+   "worker": 4,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 2.2204959392547607,
+   "rows": 20
+  },
+  {
+   "worker": 1,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 0.752077579498291,
+   "rows": 20
+  },
+  {
+   "worker": 0,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 0.651233434677124,
+   "rows": 20
+  },
+  {
+   "worker": 2,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 0.9643945693969727,
+   "rows": 20
+  },
+  {
+   "worker": 3,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 0.7985904216766357,
+   "rows": 20
+  },
+  {
+   "worker": 4,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 0.752591609954834,
+   "rows": 20
+  },
+  {
+   "worker": 1,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 0.4910452365875244,
+   "rows": 20
+  },
+  {
+   "worker": 0,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.6057960987091064,
+   "rows": 9
+  },
+  {
+   "worker": 2,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.6199314594268799,
+   "rows": 9
+  },
+  {
+   "worker": 3,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.6044199466705322,
+   "rows": 9
+  },
+  {
+   "worker": 4,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.6123218536376953,
+   "rows": 9
+  },
+  {
+   "worker": 1,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.6992061138153076,
+   "rows": 9
+  },
+  {
+   "worker": 2,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.4980301856994629,
+   "rows": 9
+  },
+  {
+   "worker": 0,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.5367529392242432,
+   "rows": 9
+  },
+  {
+   "worker": 4,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.4447622299194336,
+   "rows": 9
+  },
+  {
+   "worker": 3,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.46713757514953613,
+   "rows": 9
+  },
+  {
+   "worker": 1,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.5121560096740723,
+   "rows": 9
+  },
+  {
+   "worker": 2,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.4607398509979248,
+   "rows": 9
+  },
+  {
+   "worker": 0,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.5031402111053467,
+   "rows": 9
+  },
+  {
+   "worker": 3,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.4730715751647949,
+   "rows": 9
+  },
+  {
+   "worker": 4,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.4990839958190918,
+   "rows": 9
+  },
+  {
+   "worker": 2,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.5541419982910156,
+   "rows": 3
+  },
+  {
+   "worker": 1,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.8988592624664307,
+   "rows": 9
+  },
+  {
+   "worker": 0,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.7398529052734375,
+   "rows": 3
+  },
+  {
+   "worker": 4,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.713444709777832,
+   "rows": 3
+  },
+  {
+   "worker": 3,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.735727071762085,
+   "rows": 3
+  },
+  {
+   "worker": 2,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.5067768096923828,
+   "rows": 3
+  },
+  {
+   "worker": 1,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.4540524482727051,
+   "rows": 3
+  },
+  {
+   "worker": 0,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.4011232852935791,
+   "rows": 3
+  },
+  {
+   "worker": 3,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.4309823513031006,
+   "rows": 3
+  },
+  {
+   "worker": 4,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.45067572593688965,
+   "rows": 3
+  },
+  {
+   "worker": 1,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.3434739112854004,
+   "rows": 3
+  },
+  {
+   "worker": 2,
+   "query": "q3_fact_join_dimension_silver",
+   "ok": true,
+   "latency_s": 4.899917125701904,
+   "rows": 12
+  },
+  {
+   "worker": 3,
+   "query": "q3_fact_join_dimension_silver",
+   "ok": true,
+   "latency_s": 4.817497491836548,
+   "rows": 12
+  },
+  {
+   "worker": 0,
+   "query": "q3_fact_join_dimension_silver",
+   "ok": true,
+   "latency_s": 4.913797855377197,
+   "rows": 12
+  },
+  {
+   "worker": 4,
+   "query": "q3_fact_join_dimension_silver",
+   "ok": true,
+   "latency_s": 5.007246017456055,
+   "rows": 12
+  },
+  {
+   "worker": 1,
+   "query": "q3_fact_join_dimension_silver",
+   "ok": true,
+   "latency_s": 4.728111743927002,
+   "rows": 12
+  },
+  {
+   "worker": 3,
+   "query": "q5_events_last_7_days_silver",
+   "ok": true,
+   "latency_s": 1.4411413669586182,
+   "rows": 21
+  },
+  {
+   "worker": 0,
+   "query": "q5_events_last_7_days_silver",
+   "ok": true,
+   "latency_s": 1.3856639862060547,
+   "rows": 21
+  },
+  {
+   "worker": 2,
+   "query": "q5_events_last_7_days_silver",
+   "ok": true,
+   "latency_s": 1.5478777885437012,
+   "rows": 21
+  },
+  {
+   "worker": 1,
+   "query": "q5_events_last_7_days_silver",
+   "ok": true,
+   "latency_s": 1.3167550563812256,
+   "rows": 21
+  },
+  {
+   "worker": 4,
+   "query": "q5_events_last_7_days_silver",
+   "ok": true,
+   "latency_s": 1.339017629623413,
+   "rows": 21
+  },
+  {
+   "worker": 2,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.6320335865020752,
+   "rows": 140
+  },
+  {
+   "worker": 0,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.6960368156433105,
+   "rows": 140
+  },
+  {
+   "worker": 3,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.7154245376586914,
+   "rows": 140
+  },
+  {
+   "worker": 4,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.6495978832244873,
+   "rows": 140
+  },
+  {
+   "worker": 1,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.6915013790130615,
+   "rows": 140
+  },
+  {
+   "worker": 0,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.406876802444458,
+   "rows": 140
+  },
+  {
+   "worker": 2,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.4672818183898926,
+   "rows": 140
+  },
+  {
+   "worker": 4,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.4568212032318115,
+   "rows": 140
+  },
+  {
+   "worker": 3,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.5054309368133545,
+   "rows": 140
+  },
+  {
+   "worker": 1,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.5562875270843506,
+   "rows": 140
+  },
+  {
+   "worker": 0,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.35396432876586914,
+   "rows": 140
+  },
+  {
+   "worker": 2,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.446962833404541,
+   "rows": 140
+  },
+  {
+   "worker": 3,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.41309547424316406,
+   "rows": 140
+  },
+  {
+   "worker": 4,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.4349191188812256,
+   "rows": 140
+  },
+  {
+   "worker": 1,
+   "query": "q1_daily_revenue_by_region_gold",
+   "ok": true,
+   "latency_s": 0.4071383476257324,
+   "rows": 140
+  },
+  {
+   "worker": 0,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.345320463180542,
+   "rows": 10
+  },
+  {
+   "worker": 2,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.31127071380615234,
+   "rows": 10
+  },
+  {
+   "worker": 3,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.31456542015075684,
+   "rows": 10
+  },
+  {
+   "worker": 4,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.3109018802642822,
+   "rows": 10
+  },
+  {
+   "worker": 1,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.3935084342956543,
+   "rows": 10
+  },
+  {
+   "worker": 0,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.41294312477111816,
+   "rows": 10
+  },
+  {
+   "worker": 2,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.809420108795166,
+   "rows": 10
+  },
+  {
+   "worker": 4,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.7966551780700684,
+   "rows": 10
+  },
+  {
+   "worker": 3,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.8719930648803711,
+   "rows": 10
+  },
+  {
+   "worker": 0,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.6634337902069092,
+   "rows": 10
+  },
+  {
+   "worker": 1,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.7615654468536377,
+   "rows": 10
+  },
+  {
+   "worker": 2,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.4204580783843994,
+   "rows": 10
+  },
+  {
+   "worker": 4,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.3822510242462158,
+   "rows": 10
+  },
+  {
+   "worker": 3,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.3462653160095215,
+   "rows": 10
+  },
+  {
+   "worker": 1,
+   "query": "q2_top_categories_month_gold",
+   "ok": true,
+   "latency_s": 0.2993428707122803,
+   "rows": 10
+  },
+  {
+   "worker": 0,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 0.42042016983032227,
+   "rows": 6
+  },
+  {
+   "worker": 2,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 0.36895322799682617,
+   "rows": 6
+  },
+  {
+   "worker": 4,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 0.36626243591308594,
+   "rows": 6
+  },
+  {
+   "worker": 3,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 0.3375241756439209,
+   "rows": 6
+  },
+  {
+   "worker": 1,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 0.333477258682251,
+   "rows": 6
+  },
+  {
+   "worker": 0,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 0.35348057746887207,
+   "rows": 6
+  },
+  {
+   "worker": 0,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 0.21680116653442383,
+   "rows": 20
+  },
+  {
+   "worker": 4,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 0.38799142837524414,
+   "rows": 6
+  },
+  {
+   "worker": 2,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 0.42015838623046875,
+   "rows": 6
+  },
+  {
+   "worker": 3,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 0.4065113067626953,
+   "rows": 6
+  },
+  {
+   "worker": 1,
+   "query": "q4_funnel_conversion_gold",
+   "ok": true,
+   "latency_s": 0.4268918037414551,
+   "rows": 6
+  },
+  {
+   "worker": 4,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 0.28753662109375,
+   "rows": 20
+  },
+  {
+   "worker": 2,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 0.2954676151275635,
+   "rows": 20
+  },
+  {
+   "worker": 3,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 0.2906222343444824,
+   "rows": 20
+  },
+  {
+   "worker": 0,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 0.33170580863952637,
+   "rows": 20
+  },
+  {
+   "worker": 1,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 0.26111507415771484,
+   "rows": 20
+  },
+  {
+   "worker": 3,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 0.34591007232666016,
+   "rows": 20
+  },
+  {
+   "worker": 1,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 0.33449220657348633,
+   "rows": 20
+  },
+  {
+   "worker": 2,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 0.3549611568450928,
+   "rows": 20
+  },
+  {
+   "worker": 4,
+   "query": "q7_customer_monthly_top_spenders_gold",
+   "ok": true,
+   "latency_s": 0.3810291290283203,
+   "rows": 20
+  },
+  {
+   "worker": 0,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.5405228137969971,
+   "rows": 9
+  },
+  {
+   "worker": 2,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.4524352550506592,
+   "rows": 9
+  },
+  {
+   "worker": 1,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.4609379768371582,
+   "rows": 9
+  },
+  {
+   "worker": 3,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.4778413772583008,
+   "rows": 9
+  },
+  {
+   "worker": 4,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.5062415599822998,
+   "rows": 9
+  },
+  {
+   "worker": 0,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.45199155807495117,
+   "rows": 9
+  },
+  {
+   "worker": 2,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.4665064811706543,
+   "rows": 9
+  },
+  {
+   "worker": 1,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.4949324131011963,
+   "rows": 9
+  },
+  {
+   "worker": 3,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.5058016777038574,
+   "rows": 9
+  },
+  {
+   "worker": 4,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.46982431411743164,
+   "rows": 9
+  },
+  {
+   "worker": 0,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.4252145290374756,
+   "rows": 9
+  },
+  {
+   "worker": 0,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.2508876323699951,
+   "rows": 3
+  },
+  {
+   "worker": 2,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.43605470657348633,
+   "rows": 9
+  },
+  {
+   "worker": 1,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.40828919410705566,
+   "rows": 9
+  },
+  {
+   "worker": 3,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.39328503608703613,
+   "rows": 9
+  },
+  {
+   "worker": 4,
+   "query": "q8_store_lookup_point_query",
+   "ok": true,
+   "latency_s": 0.396221399307251,
+   "rows": 9
+  },
+  {
+   "worker": 1,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.32616639137268066,
+   "rows": 3
+  },
+  {
+   "worker": 0,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.36590576171875,
+   "rows": 3
+  },
+  {
+   "worker": 2,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.3658738136291504,
+   "rows": 3
+  },
+  {
+   "worker": 4,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.34668517112731934,
+   "rows": 3
+  },
+  {
+   "worker": 3,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.36498546600341797,
+   "rows": 3
+  },
+  {
+   "worker": 2,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.6158223152160645,
+   "rows": 3
+  },
+  {
+   "worker": 1,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.6860077381134033,
+   "rows": 3
+  },
+  {
+   "worker": 4,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.6670870780944824,
+   "rows": 3
+  },
+  {
+   "worker": 3,
+   "query": "q6_current_state_customer_after_cdc",
+   "ok": true,
+   "latency_s": 0.6761338710784912,
+   "rows": 3
+  },
+  {
+   "worker": 0,
+   "query": "q3_fact_join_dimension_silver",
+   "ok": true,
+   "latency_s": 2.1512386798858643,
+   "rows": 12
+  },
+  {
+   "worker": 4,
+   "query": "q3_fact_join_dimension_silver",
+   "ok": true,
+   "latency_s": 1.6506235599517822,
+   "rows": 12
+  },
+  {
+   "worker": 3,
+   "query": "q3_fact_join_dimension_silver",
+   "ok": true,
+   "latency_s": 1.6463913917541504,
+   "rows": 12
+  },
+  {
+   "worker": 2,
+   "query": "q3_fact_join_dimension_silver",
+   "ok": true,
+   "latency_s": 1.796229362487793,
+   "rows": 12
+  },
+  {
+   "worker": 1,
+   "query": "q3_fact_join_dimension_silver",
+   "ok": true,
+   "latency_s": 1.8030495643615723,
+   "rows": 12
+  },
+  {
+   "worker": 0,
+   "query": "q5_events_last_7_days_silver",
+   "ok": true,
+   "latency_s": 0.6180264949798584,
+   "rows": 21
+  },
+  {
+   "worker": 4,
+   "query": "q5_events_last_7_days_silver",
+   "ok": true,
+   "latency_s": 0.4810976982116699,
+   "rows": 21
+  },
+  {
+   "worker": 3,
+   "query": "q5_events_last_7_days_silver",
+   "ok": true,
+   "latency_s": 0.4698655605316162,
+   "rows": 21
+  },
+  {
+   "worker": 2,
+   "query": "q5_events_last_7_days_silver",
+   "ok": true,
+   "latency_s": 0.41889524459838867,
+   "rows": 21
+  },
+  {
+   "worker": 1,
+   "query": "q5_events_last_7_days_silver",
+   "ok": true,
+   "latency_s": 0.4269266128540039,
+   "rows": 21
+  }
+ ]
+}

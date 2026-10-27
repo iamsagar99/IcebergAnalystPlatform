@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lakehouse POC Runbook</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap">
+<style>
+/* Layout: fixed left index on wide screens, single column below 900px; runbook steps as numbered sections because the order is real. */
+:root {
+  --bg: #f7f6f2; --panel: #ffffff; --fg: #1d2129; --muted: #5e6572; --line: #d9d6cc;
+  --accent: #0d6b5c; --accent-soft: #e0f0ec; --code-bg: #1e2430; --code-fg: #e8ecf1;
+  --ok: #1c7a46; --ok-bg: #e2f3e8; --warn: #9a5b00; --warn-bg: #fdf0d8; --info: #2a5fb8; --info-bg: #e3ebfb;
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --body: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15181d; --panel: #1d2127; --fg: #e6e8ec; --muted: #9aa3b0; --line: #2f3540;
+  --accent: #4fc3a8; --accent-soft: #163a33; --code-bg: #0e1116; --code-fg: #dfe4ea;
+  --ok: #6cd39a; --ok-bg: #163a28; --warn: #f0b85b; --warn-bg: #3d2d0f; --info: #8fb4f5; --info-bg: #1b2c4d; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #15181d; --panel: #1d2127; --fg: #e6e8ec; --muted: #9aa3b0; --line: #2f3540;
+  --accent: #4fc3a8; --accent-soft: #163a33; --code-bg: #0e1116; --code-fg: #dfe4ea;
+  --ok: #6cd39a; --ok-bg: #163a28; --warn: #f0b85b; --warn-bg: #3d2d0f; --info: #8fb4f5; --info-bg: #1b2c4d; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15.5px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+a { color: var(--accent); }
+.wrap { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 40px; max-width: 1240px; margin: 0 auto; }
+nav.toc { position: sticky; top: 16px; align-self: start; max-height: calc(100vh - 32px); overflow-y: auto; padding-top: 28px; font-size: 13.5px; }
+nav.toc ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+nav.toc a { display: block; padding: 4px 8px; border-left: 2px solid transparent; color: var(--muted); text-decoration: none; border-radius: 0 4px 4px 0; }
+nav.toc a:hover, nav.toc a:focus-visible { color: var(--fg); border-left-color: var(--accent); background: var(--accent-soft); outline: none; }
+nav.toc .grp { margin: 14px 0 4px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+main { min-width: 0; max-width: 860px; }
+header.hero { padding: 36px 0 20px; border-bottom: 1px solid var(--line); }
+.eyebrow { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(30px, 4.5vw, 44px); line-height: 1.1; margin: 8px 0 12px; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 26px; margin: 44px 0 10px; padding-top: 12px; border-top: 1px solid var(--line); text-wrap: balance; }
+h3 { font-size: 18px; font-weight: 600; margin: 28px 0 8px; }
+h4 { font-size: 14.5px; font-weight: 600; margin: 22px 0 6px; color: var(--muted); }
+p, li { max-width: 70ch; }
+.lead { font-size: 17px; color: var(--muted); max-width: 70ch; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 18px 0 0; }
+.fact { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+.fact b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+.fact span { font-size: 12.5px; color: var(--muted); }
+code { font-family: var(--mono); font-size: .92em; }
+p code, li code, td code { background: var(--accent-soft); padding: 1px 5px; border-radius: 3px; }
+.cmd { position: relative; margin: 10px 0; }
+.cmd pre { margin: 0; background: var(--code-bg); color: var(--code-fg); padding: 12px 14px; padding-right: 64px; border-radius: 6px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.5; }
+.cmd .copy { position: absolute; top: 8px; right: 8px; font: 500 11px var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--code-fg); background: transparent; border: 1px solid rgba(255,255,255,.3); border-radius: 4px; padding: 3px 8px; cursor: pointer; }
+.cmd .copy:hover, .cmd .copy:focus-visible { background: rgba(255,255,255,.12); outline: none; }
+.note { font-size: 13.5px; color: var(--muted); margin: -4px 0 12px; max-width: 70ch; }
+details.out { margin: 6px 0 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+details.out summary { cursor: pointer; padding: 8px 12px; font-size: 13px; color: var(--muted); }
+details.out pre { margin: 0; padding: 10px 14px; border-top: 1px solid var(--line); overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.45; }
+.tw { overflow-x: auto; margin: 10px 0 18px; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; background: var(--panel); }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+td.id { font-family: var(--mono); font-size: 12.5px; white-space: nowrap; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; text-align: right; }
+.pill { display: inline-block; font: 500 11.5px var(--mono); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.pill.ok { color: var(--ok); background: var(--ok-bg); }
+.pill.warn { color: var(--warn); background: var(--warn-bg); }
+.pill.info { color: var(--info); background: var(--info-bg); }
+.step { border-left: 3px solid var(--accent); padding: 2px 0 2px 16px; margin: 26px 0; }
+.step h3 { margin-top: 0; }
+.step .talk { font-size: 13px; color: var(--muted); }
+.callout { border: 1px solid var(--line); border-left: 4px solid var(--warn); background: var(--panel); padding: 10px 14px; border-radius: 4px; margin: 14px 0; max-width: 72ch; font-size: 14px; }
+.callout.ok { border-left-color: var(--ok); }
+.callout.info { border-left-color: var(--info); }
+.links { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; margin: 12px 0; }
+.links a { display: block; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; text-decoration: none; color: var(--fg); }
+.links a small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.links a:hover { border-color: var(--accent); }
+kbd { font-family: var(--mono); font-size: .85em; border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; }
+footer { margin-top: 48px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+@media (max-width: 900px) { .wrap { grid-template-columns: 1fr; gap: 0; } nav.toc { position: static; max-height: none; padding-top: 16px; } }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+<div class="grp">Runbook</div>
+<ol>
+<li><a href="#overview">0. Overview</a></li>
+<li><a href="#setup">1. Setup</a></li>
+<li><a href="#links">2. Endpoints and links</a></li>
+<li><a href="#walkthrough">3. Walkthrough (15 steps)</a></li>
+<li><a href="#tests">4. Test cases</a></li>
+<li><a href="#benchmarks">5. Benchmarks</a></li>
+<li><a href="#ops">6. Operations</a></li>
+<li><a href="#security">7. Users and policies</a></li>
+<li><a href="#jupyter">8. Jupyter</a></li>
+<li><a href="#trouble">9. Troubleshooting</a></li>
+<li><a href="#docs">10. Document map</a></li>
+</ol>
+</nav>
+<main>
+<header class="hero">
+<div class="eyebrow">Iceberg analytics platform POC</div>
+<h1>Lakehouse POC Runbook</h1>
+<p class="lead">Setup, walkthrough, every test case and the operating procedures for the Trino + Kyuubi proof of concept on one Iceberg REST catalog. Every expected output on this page was observed on 26 Oct 2026 with the pinned versions.</p>
+<div class="facts">
+<div class="fact"><b>54 + 2</b><span>tests passed + expected failures, both engines</span></div>
+<div class="fact"><b>2</b><span>serving paths: Trino 484, Kyuubi 1.12.0</span></div>
+<div class="fact"><b>13</b><span>Iceberg tables (bronze / silver / gold)</span></div>
+<div class="fact"><b>1 M</b><span>deterministic transactions, 50,500 customers</span></div>
+</div>
+</header>
+
+<h2 id="overview">0. Overview</h2>
+<p>The repository runs a complete lakehouse on Docker Compose: MinIO-compatible object storage, a Postgres-backed Lakekeeper REST catalog, Spark for ETL and a Jupyter notebook, Prometheus and Grafana, plus two overlays, one per query engine. Both engines read the same tables, use the same user names and enforce the same authorization model.</p>
+<div class="tw"><table>
+<thead><tr><th>Component</th><th>Version / image</th><th>Role</th></tr></thead>
+<tbody>
+<tr><td>Trino</td><td><code>trinodb/trino:484</code></td><td>Primary engine. HTTPS 8443, password auth, file-based rules, resource groups, read-only Iceberg connector.</td></tr>
+<tr><td>Kyuubi + Spark</td><td><code>iap/kyuubi:1.12.0-spark-3.5.8</code> (built)</td><td>Secondary engine. Thrift 10009, JDBC auth via Postgres, Ranger AuthZ plugin inside each Spark engine.</td></tr>
+<tr><td>Spark + Iceberg</td><td><code>iap/spark:3.5.8-iceberg-1.11.0</code> (built, Java 17)</td><td>ETL / seeding / maintenance jobs and JupyterLab.</td></tr>
+<tr><td>Catalog</td><td><code>quay.io/lakekeeper/catalog:v0.14.2</code> + <code>postgres:17</code></td><td>Iceberg REST catalog, credential vending disabled.</td></tr>
+<tr><td>Storage</td><td><code>pgsty/silo:RELEASE.2026-09-03T13-18-01Z</code></td><td>MinIO fork (upstream images withdrawn). Bucket <code>lakehouse</code>.</td></tr>
+<tr><td>Ranger Admin</td><td><code>python:3.12-slim</code> running <code>ranger-admin-stub.py</code></td><td>Local simulation of Ranger Admin's policy endpoints. The plugin is real.</td></tr>
+<tr><td>Monitoring</td><td><code>prom/prometheus:v3.5.0</code>, <code>grafana/grafana:12.1.0</code></td><td>Scrapes Trino, Kyuubi, Lakekeeper, storage. Dashboard "Lakehouse POC".</td></tr>
+<tr><td>Tools</td><td><code>iap/tools:local</code> (built)</td><td>pytest, Trino and Hive clients, htpasswd, openssl. Used by every script.</td></tr>
+</tbody></table></div>
+<div class="callout info"><b>Memory.</b> Core services need about 1.2 GB, Trino about 1.7 GB, the Kyuubi server 0.5 GB plus roughly 0.75 GB per Spark engine. Give Docker at least 8 GB for one engine path and 11 GB for both. The POC was validated on a 7.5 GiB Docker VM with both paths and three engines running, so it works but has little spare.</div>
+
+<h2 id="setup">1. Setup</h2>
+<h3>1.1 Prerequisites</h3>
+<ul>
+<li>Docker Desktop (or Docker Engine) with Compose v2. On Windows, enable <em>Settings &rarr; Resources &rarr; WSL integration</em> for your distro, then open a <strong>new</strong> terminal so your user has the <code>docker</code> group.</li>
+<li>A bash shell (WSL2 Ubuntu, macOS or Linux). All scripts are run from the repository root.</li>
+<li>Internet access for the first build: image pulls (about 6 GB) and three jars from Maven Central (verified by SHA-1).</li>
+</ul>
+<h3>1.2 Configure credentials</h3>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>cp infrastructure/.env.example infrastructure/.env</code></pre></div><div class="note">Local demo passwords. The file is git-ignored; edit values if you want, never commit it.</div>
+<p>Users defined there: <code>admin</code>, <code>etl</code>, <code>analyst1</code>, <code>analyst2</code>, <code>restricted1</code>, <code>bench</code>, plus the Grafana admin and the Jupyter token (<code>lakehouse</code>).</p>
+<h3>1.3 Build and start the core</h3>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>scripts/start.sh --engine core</code></pre></div><div class="note">Builds the three images on first run (5 to 15 minutes), generates Trino's bcrypt password file, group file and self-signed certificate, then starts storage, Postgres, catalog, Spark/Jupyter and monitoring.</div>
+<details class="out"><summary>Expected output</summary><pre><code>== generating local credential files
+generated trino/generated/{password.db,groups.txt,trino.pem} and monitoring/generated/trino_monitor_password
+== starting core: minio, postgres, lakekeeper (+migrate, bootstrap), spark/jupyter, prometheus, grafana
+lakekeeper: healthy
+  catalog-init-1  | bootstrap: HTTP 204
+  catalog-init-1  | warehouse &#x27;lakehouse&#x27; created: {... &#x27;sts-enabled&#x27;: False, ... &#x27;remote-signing-enabled&#x27;: False ...}
+spark: healthy</code></pre></details>
+<h3>1.4 Compose alias for manual commands</h3>
+<p>The scripts always load all three compose files. When you type compose commands yourself, do the same, otherwise Compose warns about orphan containers or cannot find the engine services.</p>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>cd infrastructure
+alias dc=&#x27;docker compose -f docker-compose.yml -f docker-compose.trino.yml -f docker-compose.kyuubi.yml&#x27;</code></pre></div>
+
+<h2 id="links">2. Endpoints and links</h2>
+<p>All ports are published on <code>localhost</code>. Logins come from <code>infrastructure/.env</code>.</p>
+<div class="links">
+<a href="https://localhost:8443/ui" target="_blank" rel="noopener">Trino Web UI<small>https://localhost:8443/ui, self-signed cert, any user from .env</small></a>
+<a href="http://localhost:10099" target="_blank" rel="noopener">Kyuubi Web UI / REST<small>http://localhost:10099, basic auth, same users</small></a>
+<a href="http://localhost:8181" target="_blank" rel="noopener">Lakekeeper UI / REST catalog<small>http://localhost:8181, catalog at /catalog</small></a>
+<a href="http://localhost:9001" target="_blank" rel="noopener">Object browser<small>http://localhost:9001, S3_ROOT_USER / S3_ROOT_PASSWORD</small></a>
+<a href="http://localhost:8888/?token=lakehouse" target="_blank" rel="noopener">JupyterLab<small>http://localhost:8888/?token=lakehouse</small></a>
+<a href="http://localhost:3000" target="_blank" rel="noopener">Grafana<small>http://localhost:3000, admin / GRAFANA_ADMIN_PASSWORD</small></a>
+<a href="http://localhost:9090/targets" target="_blank" rel="noopener">Prometheus targets<small>http://localhost:9090/targets</small></a>
+<a href="http://localhost:6080/health" target="_blank" rel="noopener">Ranger Admin stub<small>http://localhost:6080 (simulation)</small></a>
+<a href="http://localhost:4050" target="_blank" rel="noopener">Spark UI of Kyuubi engines<small>http://localhost:4050 to 4053</small></a>
+<a href="http://localhost:4040" target="_blank" rel="noopener">Spark UI of ETL / notebook<small>http://localhost:4040 while a job runs</small></a>
+</div>
+<div class="tw"><table>
+<thead><tr><th>Client connection</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>Trino JDBC</td><td><code>jdbc:trino://localhost:8443/lakehouse?SSL=true&amp;SSLVerification=NONE</code></td></tr>
+<tr><td>Trino CLI</td><td><code>trino --server https://localhost:8443 --insecure --user analyst1 --password --catalog lakehouse</code></td></tr>
+<tr><td>Trino Python</td><td><code>trino.dbapi.connect(host='localhost', port=8443, http_scheme='https', verify=False, auth=BasicAuthentication(...))</code></td></tr>
+<tr><td>Kyuubi JDBC (Hive driver, DBeaver)</td><td><code>jdbc:hive2://localhost:10009/gold</code> with user name and password</td></tr>
+<tr><td>Kyuubi Beeline</td><td><code>kyuubi-beeline -u "jdbc:hive2://localhost:10009/gold" -n analyst1 -p analyst-pass</code> (inside the kyuubi container)</td></tr>
+<tr><td>Kyuubi PyHive</td><td><code>hive.connect(host='localhost', port=10009, username=..., password=..., auth='CUSTOM', database='gold')</code></td></tr>
+<tr><td>Catalog from Spark / notebooks</td><td>catalog <code>lakehouse</code>, URI <code>http://lakekeeper:8181/catalog</code> (inside the Docker network)</td></tr>
+</tbody></table></div>
+
+<h2 id="walkthrough">3. Walkthrough, step by step</h2>
+<p>The fifteen demonstration steps, in order. Each one names the exact command, what to expect and which components talk to each other.</p>
+
+<div class="step"><h3>Step 1. Start the core infrastructure</h3>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>scripts/start.sh --engine core</code></pre></div>
+<p class="talk">Talking: lakekeeper &rarr; postgres; catalog-init &rarr; lakekeeper management API &rarr; storage (bucket validation). Idempotent: re-running reports <em>already bootstrapped</em> and <em>warehouse already exists</em>.</p></div>
+
+<div class="step"><h3>Step 2. Initialize the bucket and the catalog namespace</h3>
+<p>Done by step 1: <code>minio-init</code> creates bucket <code>lakehouse</code>, <code>catalog-init</code> creates the warehouse with credential vending disabled. Namespaces are created by Spark in step 5. To re-run the bootstrap by hand:</p>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>cd infrastructure &amp;&amp; docker compose run --rm catalog-init &amp;&amp; cd ..</code></pre></div>
+<details class="out"><summary>Expected output</summary><pre><code>warehouse &#x27;lakehouse&#x27; already exists: id=01a176b5-b04c-7901-a75e-de86ba412948</code></pre></details></div>
+
+<div class="step"><h3>Step 3. Confirm the Spark configuration</h3>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>cd infrastructure &amp;&amp; docker compose exec spark bash -c &#x27;env | grep -E &quot;AWS_(ACCESS_KEY_ID|REGION)&quot;; spark-sql -e &quot;SHOW NAMESPACES IN lakehouse&quot; 2&gt;/dev/null&#x27; &amp;&amp; cd ..</code></pre></div>
+<p class="talk">Expected: <code>AWS_ACCESS_KEY_ID=...</code>, <code>AWS_REGION=local-01</code>, then the namespace list. The catalog and S3 settings live in <code>infrastructure/spark/spark-defaults.conf</code>; the keys come from the container environment, never from the file.</p></div>
+
+<div class="step"><h3>Steps 4 and 5. Generate data, write bronze, merge silver (CDC), build gold, verify catalog metadata</h3>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>scripts/seed.sh</code></pre></div><div class="note">About 2 to 3 minutes. Drops and recreates the tables (--reset), generates deterministic bronze data, runs the silver MERGE (dedup + CDC) and rebuilds the gold marts, then prints the catalog state. Use --no-reset to keep tables.</div>
+<details class="out"><summary>Expected output</summary><pre><code>silver.transactions                    1000000
+silver.events                           600000
+silver.customers                         50500
+silver.customer_pii                      50500
+gold.daily_sales_by_store                54000
+gold.customer_monthly_summary           147723
+|n      |sum_amount  |sum_qty|
+|1000000|287866767.34|2998315|
+table                                  snapshots   current snapshot id  format  location
+silver.customers                               1  1675475797641187707       2  s3://lakehouse/warehouse/01a176ba-...</code></pre></details>
+<p class="talk">Talking: spark &rarr; lakekeeper (REST commits); spark &rarr; storage (Parquet + metadata.json). Re-running produces identical numbers; <code>tests/expected.json</code> pins them.</p></div>
+
+<div class="step"><h3>Step 6. Start the Trino path and validate it</h3>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>scripts/start.sh --engine trino --no-build
+scripts/validate.sh --engine trino</code></pre></div>
+<details class="out"><summary>Expected output</summary><pre><code>trino: healthy
+...
+29 passed in ~55s</code></pre></details>
+<p class="talk">Talking: trino &rarr; lakekeeper (load table) &rarr; storage; clients &rarr; trino:8443 over HTTPS. Port 8080 (HTTP) is intentionally not published.</p></div>
+
+<div class="step"><h3>Step 7. Start the Kyuubi path and validate it</h3>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>scripts/start.sh --engine kyuubi --no-build
+scripts/validate.sh --engine kyuubi</code></pre></div>
+<details class="out"><summary>Expected output</summary><pre><code>kyuubi: healthy
+...
+29 passed, 2 xfailed in ~2 min</code></pre></details>
+<p class="talk">Talking: client &rarr; kyuubi:10009 &rarr; postgres (JDBC auth); kyuubi launches a Spark engine per group (spark-submit) &rarr; lakekeeper / storage; engine &rarr; ranger-admin-stub:6080 for policies. The first connection of a group takes 15 to 40 s while its engine starts. The two xfails are the documented metadata-table gap.</p></div>
+
+<div class="step"><h3>Step 8. Apply analyst roles and workload policies</h3>
+<p>Policies are files and hot-reload. Trino: <code>infrastructure/trino/rules.json</code> and <code>resource-groups.json</code> (10 s refresh for rules, passwords and groups). Kyuubi: edit <code>infrastructure/kyuubi/authz/policies.json</code> and bump <code>policyVersion</code>; engines poll every 30 s. Server settings in <code>kyuubi-defaults.conf</code> need a restart of the <code>kyuubi</code> service.</p>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>cd infrastructure
+dc logs --tail 3 ranger-admin-stub
+cd ..</code></pre></div>
+<details class="out"><summary>Expected output</summary><pre><code>[ranger-admin-stub] GET /service/plugins/policies/download/lakehouse_hive?lastKnownVersion=5&amp;... -&gt; 304</code></pre></details></div>
+
+<div class="step"><h3>Step 9. Connect as an analyst</h3>
+<p>Trino, from the tools container (or any JDBC client with the URL in section 2):</p>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>cd infrastructure
+docker compose run --rm tools python -c &quot;
+import os, trino
+from trino.auth import BasicAuthentication
+c = trino.dbapi.connect(host=&#x27;trino&#x27;, port=8443, user=&#x27;analyst1&#x27;, auth=BasicAuthentication(&#x27;analyst1&#x27;, os.environ[&#x27;ANALYST_PASSWORD&#x27;]), http_scheme=&#x27;https&#x27;, verify=False, catalog=&#x27;lakehouse&#x27;).cursor()
+c.execute(&#x27;SELECT region, SUM(revenue) FROM lakehouse.gold.daily_sales_by_store GROUP BY region ORDER BY 1&#x27;); print(c.fetchall())&quot;
+cd ..</code></pre></div>
+<p>Kyuubi, with Beeline inside the container:</p>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>cd infrastructure
+dc exec kyuubi kyuubi-beeline -u &quot;jdbc:hive2://localhost:10009/gold&quot; -n analyst1 -p analyst-pass \
+  -e &quot;SELECT region, SUM(revenue) FROM lakehouse.gold.daily_sales_by_store GROUP BY region ORDER BY 1&quot;
+cd ..</code></pre></div>
+<p class="talk">Both return the same five regions and sums. On Kyuubi, <code>SET spark.app.id</code> returns the same application id for analyst1 and analyst2: a shared engine, not a private Spark application.</p></div>
+
+<div class="step"><h3>Step 10. Run the representative queries on each engine</h3>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>cd infrastructure &amp;&amp; docker compose run --rm -e ENGINE=both tools pytest -q tests/test_trino_query_access.py tests/test_kyuubi_query_access.py -k sample_queries &amp;&amp; cd ..</code></pre></div><div class="note">Runs q1 to q8 from sql/sample_queries.sql as admin, analyst and restricted analyst on both engines.</div></div>
+
+<div class="step"><h3>Step 11. Show the restricted role being denied or masked</h3>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>cd infrastructure &amp;&amp; docker compose run --rm -e ENGINE=both tools pytest -q -k &quot;pii or masked or street_address or bronze&quot; tests &amp;&amp; cd ..</code></pre></div>
+<p class="talk">By hand: run q9 as <code>admin</code> (raw values), <code>restricted1</code> (masked e-mail, phone, national id, year-only birth date, opted-in rows only) and <code>analyst1</code> (Access Denied on Trino; <em>Permission denied: user [analyst1] does not have [select] privilege on [silver/customer_pii/email]</em> on Kyuubi).</p></div>
+
+<div class="step"><h3>Step 12. Benchmark at low concurrency</h3>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>scripts/benchmark.sh --engine trino  --concurrency &quot;5 10&quot;
+scripts/benchmark.sh --engine kyuubi --concurrency &quot;5 10&quot;
+ls benchmarks/results/</code></pre></div><div class="note">Run one engine at a time. Restart kyuubi first (dc restart kyuubi) if you want to measure engine warm-up.</div>
+<p class="talk">Results land in <code>benchmarks/results/&lt;timestamp&gt;-&lt;engine&gt;-c&lt;N&gt;.json/.md</code>. Measured values: section 5.</p></div>
+
+<div class="step"><h3>Step 13. Inspect performance and resource use</h3>
+<p>Use the links in section 2: Trino Web UI (queries, resource groups, memory), Kyuubi UI (sessions, engines), Spark UIs 4050+ (engine stages), Grafana dashboard <em>Lakehouse POC</em> (queued queries, failures, memory, engines, catalog request rate, storage bytes).</p></div>
+
+<div class="step"><h3>Step 14. Run the scheduled maintenance job</h3>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>spark/spark-submit.sh maintenance.py --dry-run
+spark/spark-submit.sh maintenance.py --older-than-minutes 1 --orphan-older-than-minutes 1
+scripts/catalog-info.sh
+cd infrastructure &amp;&amp; docker compose run --rm -e ENGINE=both tools pytest -q tests/test_data_quality.py &amp;&amp; cd ..</code></pre></div>
+<details class="out"><summary>Expected output</summary><pre><code>&lt;-- expire_snapshots bronze.transactions_raw (had 2 snapshots): 7.4s   deleted_manifest_lists_count=1
+bronze.transactions_raw   1   781757841046677107   (was 2 snapshots; current id unchanged)
+18 passed</code></pre></details>
+<p class="talk">Production runs it nightly after the ETL with the table-level retention (bronze 3 d, silver/gold 7 d). Analysts cannot run it on either engine.</p></div>
+
+<div class="step"><h3>Step 15. Stop and restart; data, policies and the seed persist</h3>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>scripts/stop.sh
+scripts/start.sh --engine both --no-build
+scripts/validate.sh --engine both</code></pre></div>
+<details class="out"><summary>Expected output</summary><pre><code>catalog-init-1  | bootstrap: HTTP 400 (already bootstrapped)
+catalog-init-1  | warehouse &#x27;lakehouse&#x27; already exists: id=01a176b5-...
+trino: healthy
+kyuubi: healthy
+54 passed, 2 xfailed in 162s</code></pre></details>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>scripts/seed.sh &amp;&amp; scripts/validate.sh --engine both   # re-seed: identical checksums
+scripts/stop.sh --purge                              # full reset: volumes deleted</code></pre></div></div>
+
+<h2 id="tests">4. Test cases</h2>
+<p>Everything below executed on 26 Oct 2026. <code>pass x2</code> means the test ran once per engine. The runner never marks a test passed without executing it; <code>scripts/validate.sh</code> exits with pytest's exit code.</p>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>scripts/validate.sh --engine both      # 54 passed, 2 xfailed
+scripts/validate.sh --engine trino     # 29 passed
+scripts/validate.sh --engine kyuubi    # 29 passed, 2 xfailed</code></pre></div>
+<p>Run a subset directly:</p>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>cd infrastructure
+docker compose run --rm -e ENGINE=both tools pytest -q tests -k &quot;cdc or masked&quot;
+docker compose run --rm -e ENGINE=kyuubi tools pytest -q --engine kyuubi tests/test_kyuubi_query_access.py -k share_level
+cd ..</code></pre></div>
+<h4><code>tests/test_catalog_access.py</code></h4><div class="tw"><table><thead><tr><th>ID</th><th>Test</th><th>Proves</th><th>Mechanism</th><th>Observed</th></tr></thead><tbody><tr><td class="id">T-CAT-1</td><td><code>test_namespaces_and_tables_registered</code></td><td>REST catalog lists namespaces bronze/silver/gold and all 13 tables Spark created</td><td>GET /catalog/v1/{prefix}/namespaces and .../tables</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-CAT-2</td><td><code>test_current_snapshot_and_history_intact</code></td><td>silver.customers has format-version 2, a current snapshot id that exists in the snapshot list, location under s3://lakehouse/warehouse/</td><td>GET table metadata</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-CAT-3</td><td><code>test_catalog_does_not_vend_storage_credentials</code></td><td>Asking the catalog for vended-credentials / remote-signing returns NO storage-credentials and no keys in config</td><td>X-Iceberg-Access-Delegation header</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-CAT-4</td><td><code>test_storage_requires_engine_identity</code></td><td>Anonymous S3 listing of the bucket is refused; the engine key can list warehouse/</td><td>boto3 unsigned vs signed</td><td><span class="pill ok">pass</span></td></tr></tbody></table></div><h4><code>tests/test_data_quality.py (runs once per engine: [trino] and [kyuubi])</code></h4><div class="tw"><table><thead><tr><th>ID</th><th>Test</th><th>Proves</th><th>Mechanism</th><th>Observed</th></tr></thead><tbody><tr><td class="id">T-DQ-1</td><td><code>test_transactions_checksum</code></td><td>COUNT=1,000,000, SUM(amount)=287,866,767.34, SUM(quantity)=2,998,315, distinct ids=1,000,000 (tests/expected.json)</td><td>v_checksum_transactions</td><td><span class="pill ok">pass x2</span></td></tr><tr><td class="id">T-DQ-2</td><td><code>test_silver_has_no_duplicates_but_bronze_does</code></td><td>silver has 0 duplicate ids; bronze has exactly 5,000 re-delivered duplicates</td><td>v_no_duplicates_in_silver, v_bronze_has_duplicates</td><td><span class="pill ok">pass x2</span></td></tr><tr><td class="id">T-DQ-3</td><td><code>test_events_count</code></td><td>silver.events = 600,000 rows</td><td>v_count_events</td><td><span class="pill ok">pass x2</span></td></tr><tr><td class="id">T-DQ-4</td><td><code>test_cdc_merge_result</code></td><td>50,500 customers, 33,480 opted in; customer 97 deleted, 50001 inserted, 14 updated</td><td>v_customers_after_cdc, v_cdc_*</td><td><span class="pill ok">pass x2</span></td></tr><tr><td class="id">T-DQ-5</td><td><code>test_pii_and_reference_counts</code></td><td>customer_pii 50,500; stores 200; product_categories 40</td><td>v_pii_count, v_stores, v_categories</td><td><span class="pill ok">pass x2</span></td></tr><tr><td class="id">T-DQ-6</td><td><code>test_gold_consistent_with_silver</code></td><td>gold.daily_sales_by_store has 54,000 rows and its revenue equals SUM(amount) of completed silver transactions</td><td>v_gold_daily_sales, v_gold_matches_silver</td><td><span class="pill ok">pass x2</span></td></tr><tr><td class="id">T-DQ-7</td><td><code>test_gold_row_counts[3 marts]</code></td><td>category_sales_daily 3,600; customer_monthly_summary 147,723; event_funnel_daily 540</td><td>COUNT(*) per mart</td><td><span class="pill ok">pass x6</span></td></tr></tbody></table></div><h4><code>tests/test_trino_query_access.py</code></h4><div class="tw"><table><thead><tr><th>ID</th><th>Test</th><th>Proves</th><th>Mechanism</th><th>Observed</th></tr></thead><tbody><tr><td class="id">T-TR-1</td><td><code>test_bad_password_rejected</code></td><td>Wrong password -&gt; HTTP 401 from Trino</td><td>trino client, BasicAuthentication</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-TR-2</td><td><code>test_admin_runs_all_sample_queries_and_sees_raw_pii</code></td><td>admin runs q1-q8 and reads raw e-mail/phone/national id, opted-in and opted-out rows</td><td>sql/sample_queries.sql</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-TR-3</td><td><code>test_analyst_runs_sample_queries_but_pii_is_denied</code></td><td>analyst1 runs q1-q8; q9 on silver.customer_pii -&gt; Access Denied</td><td>rules.json empty-privileges rule</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-TR-4</td><td><code>test_restricted_analyst_gets_masked_and_filtered_pii</code></td><td>restricted1 sees masked e-mail/phone/national id, year-only DOB, only marketing_opt_in rows; count &lt; admin&#x27;s count</td><td>rules.json columns.mask + filter</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-TR-5</td><td><code>test_metadata_tables_blocked[analyst|restricted]</code></td><td>&quot;table$snapshots&quot; and &quot;table$history&quot; denied</td><td>rule table .*\$.* with no privileges</td><td><span class="pill ok">pass x2</span></td></tr><tr><td class="id">T-TR-6</td><td><code>test_bronze_blocked[analyst|restricted]</code></td><td>column reads, SELECT * and COUNT(*) on bronze denied</td><td>catalog read-only + no bronze rule</td><td><span class="pill ok">pass x2</span></td></tr><tr><td class="id">T-TR-7</td><td><code>test_street_address_blocked_for_restricted</code></td><td>SELECT street_address denied (column allow=false)</td><td>rules.json</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-TR-8</td><td><code>test_writes_blocked[analyst|restricted]</code></td><td>DELETE and INSERT denied</td><td>iceberg.security=read_only</td><td><span class="pill ok">pass x2</span></td></tr><tr><td class="id">T-TR-9</td><td><code>test_maintenance_procedures_blocked[analyst|restricted|admin]</code></td><td>ALTER TABLE EXECUTE expire_snapshots/optimize and CALL rollback_to_snapshot denied for everyone</td><td>iceberg.security=read_only</td><td><span class="pill ok">pass x3</span></td></tr><tr><td class="id">T-TR-10</td><td><code>test_time_travel_posture_for_analyst</code></td><td>$snapshots denied; FOR VERSION AS OF &lt;guessed id&gt; fails</td><td>rules.json</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-TR-11</td><td><code>test_resource_group_assignment</code></td><td>analyst1 query lands in global.interactive.user-analyst1; admin in admin (read from system.runtime.queries as admin)</td><td>resource-groups.json selectors</td><td><span class="pill ok">pass</span></td></tr></tbody></table></div><h4><code>tests/test_kyuubi_query_access.py</code></h4><div class="tw"><table><thead><tr><th>ID</th><th>Test</th><th>Proves</th><th>Mechanism</th><th>Observed</th></tr></thead><tbody><tr><td class="id">T-KY-1</td><td><code>test_bad_password_rejected</code></td><td>Wrong password -&gt; SASL/JDBC auth failure (Postgres auth_users)</td><td>kyuubi.authentication=JDBC</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-KY-2</td><td><code>test_admin_runs_all_sample_queries_and_sees_raw_pii</code></td><td>admin runs q1-q8 on its own USER-level engine and reads raw PII</td><td>Ranger policy admins-and-etl</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-KY-3</td><td><code>test_analyst_runs_sample_queries_but_pii_is_denied</code></td><td>analyst1 runs q1-q8; q9 -&gt; Permission denied: user [analyst1] does not have [select] privilege on [silver/customer_pii/...]</td><td>Ranger allow-list</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-KY-4</td><td><code>test_restricted_analyst_gets_masked_and_filtered_pii</code></td><td>MASK_SHOW_FIRST_4 e-mail, MASK_SHOW_LAST_4 phone, MASK_HASH national id, MASK_DATE_SHOW_YEAR DOB, row filter marketing_opt_in = true</td><td>Ranger mask + row-filter policies</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-KY-5</td><td><code>test_metadata_tables_blocked[analyst|restricted]</code></td><td>KNOWN GAP: .snapshots/.history ARE readable; test is xfail(strict) so a fix shows up as XPASS</td><td>Kyuubi AuthZ 1.12.0</td><td><span class="pill warn">xfail x2 (expected)</span></td></tr><tr><td class="id">T-KY-6</td><td><code>test_pii_row_count_hidden_from_analyst</code></td><td>COUNT(*) on customer_pii returns 0 for analysts (compensating row filter)</td><td>filter customer_id &lt; 0 AND customer_id &gt; 0</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-KY-7</td><td><code>test_time_travel_posture</code></td><td>VERSION AS OF: analyst denied on e-mail, COUNT(*)=0; restricted gets masked+filtered rows</td><td>Ranger policies apply to time-travel relations</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-KY-8</td><td><code>test_bronze_blocked[analyst|restricted]</code></td><td>column reads denied; COUNT(*) returns 0</td><td>allow-list + row filter</td><td><span class="pill ok">pass x2</span></td></tr><tr><td class="id">T-KY-9</td><td><code>test_street_address_blocked_for_restricted</code></td><td>explicit column deny policy</td><td>denyPolicyItems</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-KY-10</td><td><code>test_writes_blocked[analyst|restricted]</code></td><td>DELETE / INSERT denied (no update/create privilege)</td><td>Ranger</td><td><span class="pill ok">pass x2</span></td></tr><tr><td class="id">T-KY-11</td><td><code>test_analyst_cannot_disable_authz_extension</code></td><td>Connecting with spark.sql.extensions=... is rejected</td><td>kyuubi.session.conf.restrict.list</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-KY-12</td><td><code>test_maintenance_procedure_blocked_for_analyst</code></td><td>CALL lakehouse.system.expire_snapshots denied</td><td>Ranger (no alter)</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-KY-13</td><td><code>test_group_share_level_two_analysts_share_one_engine</code></td><td>analyst1 and analyst2 get the same spark.app.id (GROUP share level)</td><td>SET spark.app.id</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-KY-14</td><td><code>test_user_share_level_admin_gets_own_engine</code></td><td>analyst, admin, restricted -&gt; three different app ids</td><td>___admin___.kyuubi.engine.share.level=USER</td><td><span class="pill ok">pass</span></td></tr><tr><td class="id">T-KY-15</td><td><code>test_second_session_reuses_warm_engine</code></td><td>Reconnecting as the group reuses the running engine (same app id)</td><td>engine idle timeout PT10M</td><td><span class="pill ok">pass</span></td></tr></tbody></table></div>
+<h3>Manual and operational checks</h3>
+<div class="tw"><table><thead><tr><th>ID</th><th>Check</th><th>Command / place</th><th>Expected</th><th>Status</th></tr></thead><tbody><tr><td class="id">M-1</td><td>Infrastructure health</td><td><code>scripts/validate.sh --engine both (section 1)</code></td><td>minio, postgres, lakekeeper, spark, trino, kyuubi all report healthy</td><td><span class="pill ok">observed</span></td></tr><tr><td class="id">M-2</td><td>Catalog metadata after seed</td><td><code>scripts/catalog-info.sh</code></td><td>13 tables, 1-2 snapshots each, current snapshot id per table, locations under s3://lakehouse/warehouse/&lt;uuid&gt;</td><td><span class="pill ok">observed</span></td></tr><tr><td class="id">M-3</td><td>Seed reproducibility</td><td><code>scripts/seed.sh twice, then validate</code></td><td>Identical counts/checksums on both runs (50,500 customers after the CDC fix)</td><td><span class="pill ok">observed</span></td></tr><tr><td class="id">M-4</td><td>Benchmark Trino c5/c10</td><td><code>scripts/benchmark.sh --engine trino --concurrency &quot;5 10&quot;</code></td><td>170/170 and 340/340 ok; p50 0.54 s / 0.68 s; connect p95 0.43 / 0.59 s</td><td><span class="pill ok">observed</span></td></tr><tr><td class="id">M-5</td><td>Benchmark Kyuubi c5/c10</td><td><code>scripts/benchmark.sh --engine kyuubi --concurrency &quot;5 10&quot;</code></td><td>170/170 and 340/340 ok; p50 1.17 s / 1.09 s; connect p95 37.98 s (engine launch) / 5.29 s</td><td><span class="pill ok">observed</span></td></tr><tr><td class="id">M-6</td><td>Maintenance job</td><td><code>spark/spark-submit.sh maintenance.py --older-than-minutes 1</code></td><td>bronze.transactions_raw 2 -&gt; 1 snapshots, current ids unchanged, data-quality 18 passed afterwards on both engines</td><td><span class="pill ok">observed</span></td></tr><tr><td class="id">M-7</td><td>Stop / restart persistence</td><td><code>scripts/stop.sh; scripts/start.sh --engine both --no-build; scripts/validate.sh --engine both</code></td><td>catalog-init: already bootstrapped / warehouse already exists; same snapshot ids; 54 passed, 2 xfailed</td><td><span class="pill ok">observed</span></td></tr><tr><td class="id">M-8</td><td>Monitoring targets</td><td><code>http://localhost:9090/targets</code></td><td>trino (https, basic auth), kyuubi, lakekeeper, minio, prometheus all UP; Grafana dashboard &#x27;Lakehouse POC&#x27; shows data</td><td><span class="pill ok">observed</span></td></tr><tr><td class="id">M-9</td><td>Jupyter SparkSession</td><td><code>http://localhost:8888/?token=lakehouse -&gt; explore_warehouse.ipynb</code></td><td>SHOW NAMESPACES, snapshots, time travel and files cells run as the ETL identity</td><td><span class="pill info">manual</span></td></tr></tbody></table></div>
+<div class="callout"><b>About the two expected failures.</b> Kyuubi's AuthZ plugin (1.12.0) does not authorize Iceberg metadata tables, so <code>.snapshots</code> and <code>.history</code> are readable by analysts. The test asserts denial and is marked <code>xfail(strict=True)</code>: it is reported as expected-failure today and will turn into a hard failure (XPASS) the day an upgrade closes the gap, which is the signal to update the documentation. Compensating controls: analysts hold no storage credentials, and time-travel reads still pass masks and row filters (T-KY-7).</div>
+
+<h2 id="benchmarks">5. Benchmarks</h2>
+<p>Workload: the q1 to q8 mix from <code>sql/sample_queries.sql</code> (80 % gold marts, 20 % silver), user <code>bench</code>, two passes per worker. Laptop numbers (Docker VM 7.5 GiB), one engine at a time; the shape scales, the absolute values do not.</p>
+<div class="tw"><table>
+<thead><tr><th>Engine</th><th>Concurrency</th><th>ok / failed</th><th>Throughput q/s</th><th>p50 s</th><th>p95 s</th><th>max s</th><th>Connect p95 s</th></tr></thead>
+<tbody>
+<tr><td>Trino 484</td><td class="num">5</td><td class="num">170 / 0</td><td class="num">5.40</td><td class="num">0.54</td><td class="num">2.22</td><td class="num">5.01</td><td class="num">0.43</td></tr>
+<tr><td>Trino 484</td><td class="num">10</td><td class="num">340 / 0</td><td class="num">9.83</td><td class="num">0.68</td><td class="num">3.68</td><td class="num">5.38</td><td class="num">0.59</td></tr>
+<tr><td>Kyuubi 1.12.0</td><td class="num">5</td><td class="num">170 / 0</td><td class="num">1.55</td><td class="num">1.17</td><td class="num">8.03</td><td class="num">10.78</td><td class="num">37.98 (engine launch)</td></tr>
+<tr><td>Kyuubi 1.12.0</td><td class="num">10</td><td class="num">340 / 0</td><td class="num">6.09</td><td class="num">1.09</td><td class="num">5.14</td><td class="num">7.52</td><td class="num">5.29 (warm)</td></tr>
+</tbody></table></div>
+<p>Per-query p50 / p95 at concurrency 10 and the interpretation are in <a href="engine-comparison.md">docs/engine-comparison.md</a>; the full plan with the 1 / 5 / 10 / 20 / 40 ramp and the ETL-overlap run for a staging cluster is <a href="../benchmarks/benchmark-plan.md">benchmarks/benchmark-plan.md</a>.</p>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>scripts/benchmark.sh --engine both --concurrency &quot;1 5 10&quot; --iterations 3 --label staging</code></pre></div><div class="note">Generator options: --engine, --concurrency, --iterations, --duration (hard stop in s), --label.</div>
+
+<h2 id="ops">6. Operations</h2>
+<h3>Daily commands</h3>
+<div class="tw"><table>
+<thead><tr><th>Task</th><th>Command</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>Start one path</td><td><code>scripts/start.sh --engine trino|kyuubi|both|core [--no-build]</code></td><td>Core is always started. Memory in section 0.</td></tr>
+<tr><td>Stop, keep data</td><td><code>scripts/stop.sh</code></td><td>Volumes (catalog, storage, Grafana, policy cache) persist.</td></tr>
+<tr><td>Full reset</td><td><code>scripts/stop.sh --purge</code></td><td>Deletes volumes; next start re-bootstraps; seed recreates identical data.</td></tr>
+<tr><td>Re-seed</td><td><code>scripts/seed.sh [--no-reset]</code></td><td>Default drops and recreates tables (PURGE).</td></tr>
+<tr><td>Validate</td><td><code>scripts/validate.sh --engine both</code></td><td>Health + catalog listing + pytest.</td></tr>
+<tr><td>Catalog state</td><td><code>scripts/catalog-info.sh</code></td><td>Tables, snapshot counts, current ids, locations (engine independent).</td></tr>
+<tr><td>Maintenance</td><td><code>spark/spark-submit.sh maintenance.py [--dry-run] [--older-than-minutes N]</code></td><td>Expire snapshots + remove orphan files; platform team only.</td></tr>
+<tr><td>Any Spark job</td><td><code>spark/spark-submit.sh &lt;job.py&gt; [args]</code></td><td>Runs inside the spark container with the ETL identity.</td></tr>
+<tr><td>Logs</td><td><code>dc logs -f trino</code> / <code>dc logs -f kyuubi</code></td><td>Kyuubi engine logs: <code>dc exec kyuubi ls /opt/kyuubi/work/&lt;group&gt;/</code></td></tr>
+<tr><td>Restart one service</td><td><code>dc restart kyuubi</code></td><td>Restarting Kyuubi kills its engines (they relaunch on the next session).</td></tr>
+<tr><td>Memory / CPU</td><td><code>docker stats --no-stream</code></td><td>Engines show as part of the kyuubi container.</td></tr>
+</tbody></table></div>
+<h3>Changing policies</h3>
+<ol>
+<li><b>Trino access rules</b>: edit <code>infrastructure/trino/rules.json</code>; reloaded within 10 s; errors appear in <code>dc logs trino</code> (an unknown field aborts the reload, the previous rules stay active).</li>
+<li><b>Trino users / groups</b>: edit <code>.env</code> and run <code>scripts/start.sh --engine trino --no-build</code> to regenerate <code>trino/generated/</code>. Kyuubi users: the Postgres table <code>kyuubi_auth.auth_users</code> is created on first start only; to change a password run <code>dc exec postgres psql -U postgres -d kyuubi_auth</code> and update <code>password_hash = encode(sha256(convert_to('new','UTF8')),'hex')</code>.</li>
+<li><b>Kyuubi / Ranger policies</b>: edit <code>infrastructure/kyuubi/authz/policies.json</code>, increase <code>policyVersion</code>, wait 30 s (engine poll). Row filters that must survive constant folding use <code>key &lt; 0 AND key &gt; 0</code>, never <code>1 = 0</code>.</li>
+<li><b>Groups</b>: both <code>trino/generated/groups.txt</code> (from <code>scripts/_lib.sh</code>) and <code>infrastructure/hadoop/core-site.xml</code> must agree; restart kyuubi after changing the Hadoop mapping.</li>
+<li><b>Kyuubi server settings</b> (share levels, pools, timeouts, queues, restricted confs): <code>kyuubi-defaults.conf</code>, then <code>dc restart kyuubi</code>.</li>
+<li><b>Trino resource groups</b>: <code>resource-groups.json</code>; a restart of trino is the safe way to apply.</li>
+</ol>
+<h3>Adding a table</h3>
+<p>Add DDL to <code>spark/create_tables.py</code> (Spark owns metadata), its generator or merge step, a grant in <code>rules.json</code> and in <code>policies.json</code>, a validation query, and an entry in <code>tests/expected.json</code> after one real run. Both engines see it immediately after the Spark commit.</p>
+<h3>Recovery scenarios</h3>
+<div class="tw"><table>
+<thead><tr><th>Scenario</th><th>Symptom</th><th>Action</th></tr></thead>
+<tbody>
+<tr><td>Catalog down</td><td>Both engines: table not found / connection refused to lakekeeper:8181</td><td><code>dc up -d lakekeeper</code>; Postgres holds state, nothing is lost. Running queries finish.</td></tr>
+<tr><td>Storage down</td><td>Reads fail on both engines, ETL fails</td><td><code>dc up -d minio</code>; retry. Data is in the volume <code>iap_miniodata</code>.</td></tr>
+<tr><td>Trino coordinator down</td><td>8443 refused</td><td><code>dc up -d trino</code>; stateless; 30 s to healthy.</td></tr>
+<tr><td>Kyuubi server down</td><td>10009 refused</td><td><code>dc up -d kyuubi</code>; engines are relaunched on demand.</td></tr>
+<tr><td>Engine OOM / stuck</td><td>One group's queries fail or hang</td><td><code>dc restart kyuubi</code> (kills all engines) or kill the one engine process inside the container; lower <code>spark.driver.maxResultSize</code> / row caps if it recurs.</td></tr>
+<tr><td>Runaway query</td><td>High latency for everyone</td><td>Trino: kill from the Web UI (admin); Kyuubi: close the operation from the UI/REST or wait for <code>kyuubi.operation.query.timeout</code> (15 min).</td></tr>
+<tr><td>Policy service unreachable</td><td>Ranger stub down</td><td>Engines keep enforcing the last policies from <code>/opt/kyuubi/policycache</code>; restart the stub.</td></tr>
+<tr><td>Corrupt or test-polluted data</td><td>Checksums differ from <code>tests/expected.json</code></td><td><code>scripts/seed.sh</code> (reset) restores the exact state.</td></tr>
+</tbody></table></div>
+
+<h2 id="security">7. Users and policies</h2>
+<div class="tw"><table>
+<thead><tr><th>User</th><th>Groups</th><th>Trino</th><th>Kyuubi</th></tr></thead>
+<tbody>
+<tr><td><code>admin</code></td><td>admins</td><td>everything (engine is read-only; maintenance is Spark only)</td><td>everything; private USER-level engine; Kyuubi administrator (REST)</td></tr>
+<tr><td><code>etl</code></td><td>etl</td><td>all tables</td><td>CONNECTION-level engine, YARN queue etl</td></tr>
+<tr><td><code>analyst1</code>, <code>analyst2</code></td><td>analysts</td><td>SELECT on gold.* and silver non-PII tables; PII table denied; metadata tables denied</td><td>same grants; shared GROUP engine; COUNT(*) on denied tables returns 0</td></tr>
+<tr><td><code>restricted1</code></td><td>restricted_analysts</td><td>as analysts + customer_pii masked, row-filtered, street_address blocked</td><td>same, via Ranger masks and row filter; own GROUP engine</td></tr>
+<tr><td><code>bench</code></td><td>analysts</td><td>own resource group <code>global.bench</code></td><td>USER-level engine pool of 2</td></tr>
+<tr><td><code>monitor</code></td><td>monitors</td><td>system information read only (Prometheus scrape)</td><td>n/a</td></tr>
+</tbody></table></div>
+<p>The full model, enforcement points, verified gaps and the production replacements (LDAP/OIDC, Ranger Admin or OPA, Kerberos on HDFS) are in <a href="security-model.md">docs/security-model.md</a> and <a href="../security/roles-and-groups.md">security/roles-and-groups.md</a>. Production policy examples: <a href="../security/access-policy-examples/README.md">security/access-policy-examples/</a>.</p>
+
+<h2 id="jupyter">8. Jupyter notebook with a SparkSession</h2>
+<p>Open <a href="http://localhost:8888/?token=lakehouse" target="_blank" rel="noopener">http://localhost:8888/?token=lakehouse</a> and run <code>explore_warehouse.ipynb</code>. The kernel lives in the <code>spark</code> container, so <code>SparkSession.builder.getOrCreate()</code> picks up the same catalog, Iceberg and S3 configuration as the ETL jobs.</p>
+<ul>
+<li>Browse namespaces and tables, run the fact/dimension join, inspect <code>.snapshots</code>, <code>.history</code> and <code>.files</code>, time travel with <code>VERSION AS OF</code>.</li>
+<li>Manual manipulation: the notebook contains a commented example that appends a CDC correction to bronze and re-runs the silver merge. Run <code>scripts/seed.sh</code> afterwards to return to the reproducible state.</li>
+<li>Pandas hand-off with <code>toPandas()</code> for ad-hoc analysis.</li>
+</ul>
+<div class="callout">This path runs as the platform/ETL identity. It is a verification tool, not an analyst endpoint: it bypasses neither engine, it simply <em>is</em> the trusted engine identity. Analysts use Trino or Kyuubi.</div>
+<div class="cmd"><button class="copy" type="button" aria-label="Copy command">copy</button><pre><code>docker compose exec spark python3 -c &quot;from pyspark.sql import SparkSession; s=SparkSession.builder.getOrCreate(); s.sql(&#x27;SELECT COUNT(*) FROM lakehouse.gold.daily_sales_by_store&#x27;).show()&quot;</code></pre></div><div class="note">The same session from a shell inside the container (run from infrastructure/).</div>
+
+<h2 id="trouble">9. Troubleshooting</h2>
+<div class="tw"><table>
+<thead><tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td><code>permission denied while trying to connect to the docker API</code></td><td>Shell predates the docker group (WSL integration just enabled)</td><td>Open a new terminal. From an old one: <code>wsl.exe -d Ubuntu --cd "$PWD" -- docker ...</code></td></tr>
+<tr><td><code>kyuubi: starting</code> never becomes healthy</td><td>Not enough memory for the server, or REST auth failing</td><td><code>dc logs kyuubi</code>; <code>docker stats</code>; the healthcheck uses <code>admin:$ADMIN_PASSWORD</code> against <code>/api/v1/ping</code>.</td></tr>
+<tr><td>First Kyuubi query takes 30 to 40 s or times out</td><td>Engine launch (spark-submit) for that group</td><td>Normal once per idle period; raise <code>kyuubi.session.engine.idle.timeout</code> to keep engines warm.</td></tr>
+<tr><td>Kyuubi: <code>SCHEMA_NOT_FOUND lakehouse.default</code></td><td>Client issued <code>USE default</code></td><td>Connect to database <code>gold</code> (PyHive <code>database='gold'</code>, URL <code>/gold</code>).</td></tr>
+<tr><td>Kyuubi engine dies with <code>Invalid user identifier [null]</code></td><td><code>kyuubi.session.user.sign.enabled=true</code> with the AuthZ extension</td><td>Keep the default (false); see implementation-decisions.</td></tr>
+<tr><td>Ranger plugin logs <code>Cannot deserialize value of type java.util.Date</code></td><td>Service definition JSON with Ranger-UI date strings</td><td>The stub strips <code>createTime</code>/<code>updateTime</code>; keep using the shipped servicedef.</td></tr>
+<tr><td>Trino <code>401 Password not allowed for insecure authentication</code></td><td>Client used HTTP</td><td>Use HTTPS 8443 (<code>http_scheme='https', verify=False</code> / <code>--insecure</code>).</td></tr>
+<tr><td>Trino 401 for a valid user</td><td>Password file regenerated, 10 s refresh pending; or <code>.env</code> changed without restart</td><td>Wait 10 s or <code>scripts/start.sh --engine trino --no-build</code>.</td></tr>
+<tr><td>Trino fails to start: <code>Unrecognized field</code> in rules.json</td><td>Unsupported key in a rule (e.g. <code>group</code> in system_information)</td><td>Check <code>dc logs trino</code> for the field name; the docs link in implementation-decisions lists the allowed fields.</td></tr>
+<tr><td>Analyst can run <code>ALTER TABLE ... EXECUTE</code> on Trino</td><td><code>iceberg.security</code> not <code>read_only</code></td><td>Keep <code>iceberg.security=read_only</code> in <code>catalog/lakehouse.properties</code>.</td></tr>
+<tr><td>Prometheus target trino DOWN (403)</td><td>Prometheus running an old config, or the monitor password file missing</td><td><code>dc restart prometheus</code>; check <code>monitoring/generated/trino_monitor_password</code>.</td></tr>
+<tr><td>Grafana panel empty</td><td>Metric name changed with a version bump</td><td><code>curl -ksu monitor:&lt;pw&gt; https://localhost:8443/metrics | grep -i queued</code> and update the dashboard JSON.</td></tr>
+<tr><td>Compose warns about orphan containers</td><td>Command run with the core file only</td><td>Use the <code>dc</code> alias from section 1.4.</td></tr>
+<tr><td>Checksums differ after a seed</td><td>Someone wrote to the tables (notebook, ETL change)</td><td><code>scripts/seed.sh</code> resets; if the generator changed on purpose, re-record <code>tests/expected.json</code> from a real run and verify with a second seed.</td></tr>
+<tr><td>Out of memory, containers killed</td><td>Both engines + several Spark engines + a seeding job at once</td><td>Run one engine path, lower <code>KYUUBI_ENGINE_DRIVER_MEMORY</code>, shorten engine idle timeout, or raise Docker's memory.</td></tr>
+</tbody></table></div>
+
+<h2 id="docs">10. Document map</h2>
+<p>Relative links open the Markdown sources next to this file.</p>
+<div class="links">
+<a href="../README.md">README.md<small>repository structure and the 15-step demonstration</small></a>
+<a href="business-scenario.md">docs/business-scenario.md<small>hypothetical client, workload, cluster, success criteria</small></a>
+<a href="assumptions.md">docs/assumptions.md<small>assumptions, decisions and visible revisions</small></a>
+<a href="problem-analysis.md">docs/problem-analysis.md<small>P1 to P10 decomposition</small></a>
+<a href="architecture.md">docs/architecture.md<small>Mermaid diagram, flows, failure scenarios, topology</small></a>
+<a href="infrastructure-sizing.md">docs/infrastructure-sizing.md<small>baseline and 512 GB variant, memory math, saturation signals</small></a>
+<a href="resource-management.md">docs/resource-management.md<small>workload groups, Trino resource groups, Kyuubi levers, YARN queues</small></a>
+<a href="security-model.md">docs/security-model.md<small>enforcement on both engines, verified gaps, MinIO vs HDFS</small></a>
+<a href="storage-and-retention.md">docs/storage-and-retention.md<small>disk budget, growth model, snapshot retention, tiering</small></a>
+<a href="engine-comparison.md">docs/engine-comparison.md<small>side by side plus measured results</small></a>
+<a href="implementation-decisions.md">docs/implementation-decisions.md<small>pinned versions, verified facts with sources, decisions</small></a>
+<a href="final-report.md">docs/final-report.md<small>assembled report and traceability matrix</small></a>
+<a href="../benchmarks/benchmark-plan.md">benchmarks/benchmark-plan.md<small>methodology, ramp, pass/fail criteria</small></a>
+<a href="../benchmarks/results/README.md">benchmarks/results/<small>real runs only</small></a>
+<a href="../security/roles-and-groups.md">security/roles-and-groups.md<small>roles, PII policy, access review</small></a>
+<a href="../sql/kyuubi/dialect-notes.md">sql/kyuubi/dialect-notes.md<small>Trino vs Spark SQL differences</small></a>
+<a href="../infrastructure/kyuubi/authz/README.md">infrastructure/kyuubi/authz/README.md<small>Ranger plugin: what is real, what is simulated, production config</small></a>
+<a href="../infrastructure/monitoring/README.md">infrastructure/monitoring/README.md<small>scrape targets and dashboard</small></a>
+<a href="../notebooks/README.md">notebooks/README.md<small>Jupyter usage</small></a>
+</div>
+<footer>Lakehouse POC runbook. Generated from the repository state of 26 Oct 2026; versions: Trino 484, Spark 3.5.8, Iceberg 1.11.0, Kyuubi 1.12.0, Lakekeeper 0.14.2.</footer>
+</main>
+</div>
+<script>
+document.querySelectorAll('.cmd .copy').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var code = btn.parentElement.querySelector('code');
+    var text = code.textContent;
+    var done = function () { btn.textContent = 'copied'; setTimeout(function () { btn.textContent = 'copy'; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { selectText(code); });
+    } else { selectText(code); }
+  });
+});
+function selectText(el) {
+  var r = document.createRange(); r.selectNodeContents(el);
+  var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+# Prometheus scrape targets for the POC. Trino's /metrics needs an authenticated user (file password auth),
+# so scripts/start.sh writes the 'monitor' password into monitoring/generated/trino_monitor_password (git-ignored).
+global:
+  scrape_interval: 15s
+  evaluation_interval: 30s
+
+scrape_configs:
+  - job_name: trino
+    metrics_path: /metrics
+    scheme: https
+    tls_config:
+      insecure_skip_verify: true   # LOCAL-ONLY self-signed certificate
+    basic_auth:
+      username: monitor
+      password_file: /etc/prometheus/generated/trino_monitor_password
+    static_configs:
+      - targets: ["trino:8443"]
+
+  - job_name: kyuubi
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["kyuubi:10019"]
+
+  - job_name: lakekeeper
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["lakekeeper:9000"]
+
+  - job_name: minio
+    metrics_path: /minio/v2/metrics/cluster
+    static_configs:
+      - targets: ["minio:9000"]
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

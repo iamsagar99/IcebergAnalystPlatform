@@ -1,0 +1,29 @@
+{
+  "_comment": "Ranger policies for the Trino plugin (service type 'trino'). Same model as rules.json. Import via Ranger REST: POST /service/public/v2/api/policy",
+  "policies": [
+    {"service": "lakehouse_trino", "name": "admins-everything", "policyType": 0,
+     "resources": {"catalog": {"values": ["*"]}, "schema": {"values": ["*"]}, "table": {"values": ["*"]}, "column": {"values": ["*"]}},
+     "policyItems": [{"groups": ["admins"], "accesses": [{"type": "select", "isAllowed": true}, {"type": "insert", "isAllowed": true}, {"type": "delete", "isAllowed": true}, {"type": "alter", "isAllowed": true}, {"type": "execute", "isAllowed": true}, {"type": "grant", "isAllowed": true}], "delegateAdmin": true}]},
+    {"service": "lakehouse_trino", "name": "analysts-gold-select", "policyType": 0,
+     "resources": {"catalog": {"values": ["lakehouse"]}, "schema": {"values": ["gold"]}, "table": {"values": ["*"]}, "column": {"values": ["*"]}},
+     "policyItems": [{"groups": ["analysts", "restricted_analysts"], "accesses": [{"type": "select", "isAllowed": true}]}]},
+    {"service": "lakehouse_trino", "name": "analysts-silver-non-pii-select", "policyType": 0,
+     "resources": {"catalog": {"values": ["lakehouse"]}, "schema": {"values": ["silver"]}, "table": {"values": ["transactions", "events", "customers", "stores", "product_categories"]}, "column": {"values": ["*"]}},
+     "policyItems": [{"groups": ["analysts", "restricted_analysts"], "accesses": [{"type": "select", "isAllowed": true}]}]},
+    {"service": "lakehouse_trino", "name": "metadata-tables-admin-only", "policyType": 0, "policyPriority": 1,
+     "resources": {"catalog": {"values": ["lakehouse"]}, "schema": {"values": ["*"]}, "table": {"values": ["*$*"]}, "column": {"values": ["*"]}},
+     "policyItems": [], "denyPolicyItems": [{"groups": ["analysts", "restricted_analysts"], "accesses": [{"type": "select", "isAllowed": true}]}]},
+    {"service": "lakehouse_trino", "name": "restricted-pii-select", "policyType": 0,
+     "resources": {"catalog": {"values": ["lakehouse"]}, "schema": {"values": ["silver"]}, "table": {"values": ["customer_pii"]}, "column": {"values": ["customer_id", "email", "phone", "national_id", "date_of_birth", "country", "marketing_opt_in", "updated_at"]}},
+     "policyItems": [{"groups": ["restricted_analysts"], "accesses": [{"type": "select", "isAllowed": true}]}]},
+    {"service": "lakehouse_trino", "name": "mask-pii-email", "policyType": 1,
+     "resources": {"catalog": {"values": ["lakehouse"]}, "schema": {"values": ["silver"]}, "table": {"values": ["customer_pii"]}, "column": {"values": ["email"]}},
+     "dataMaskPolicyItems": [{"groups": ["restricted_analysts"], "accesses": [{"type": "select", "isAllowed": true}], "dataMaskInfo": {"dataMaskType": "CUSTOM", "valueExpr": "regexp_replace({col}, '^(.)(.*)(@.*)$', '$1***$3')"}}]},
+    {"service": "lakehouse_trino", "name": "mask-pii-national-id", "policyType": 1,
+     "resources": {"catalog": {"values": ["lakehouse"]}, "schema": {"values": ["silver"]}, "table": {"values": ["customer_pii"]}, "column": {"values": ["national_id"]}},
+     "dataMaskPolicyItems": [{"groups": ["restricted_analysts"], "accesses": [{"type": "select", "isAllowed": true}], "dataMaskInfo": {"dataMaskType": "MASK_SHOW_LAST_4"}}]},
+    {"service": "lakehouse_trino", "name": "rowfilter-pii-opt-in", "policyType": 2,
+     "resources": {"catalog": {"values": ["lakehouse"]}, "schema": {"values": ["silver"]}, "table": {"values": ["customer_pii"]}},
+     "rowFilterPolicyItems": [{"groups": ["restricted_analysts"], "accesses": [{"type": "select", "isAllowed": true}], "rowFilterInfo": {"filterExpr": "marketing_opt_in = true"}}]}
+  ]
+}

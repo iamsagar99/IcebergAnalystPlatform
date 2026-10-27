@@ -1,0 +1,64 @@
+# Overlay: Kyuubi path.  docker compose -f docker-compose.yml -f docker-compose.kyuubi.yml up -d kyuubi
+services:
+  ranger-admin-stub:
+    # LOCAL-ONLY SIMULATION of Apache Ranger Admin: serves infrastructure/kyuubi/authz/policies.json to the real
+    # Ranger plugin embedded in the Kyuubi Spark AuthZ extension, over the same REST endpoints Ranger Admin exposes.
+    # PROD: replace with Ranger Admin (apache/ranger:2.8.0 + DB + Solr) and point ranger.plugin.spark.policy.rest.url at it.
+    image: python:3.12-slim
+    command: ["python", "/authz/ranger-admin-stub.py", "--port", "6080", "--policies", "/authz/policies.json", "--servicedef", "/authz/ranger-servicedef-hive.json"]
+    volumes:
+      - ./kyuubi/authz:/authz:ro
+    ports:
+      - "6080:6080"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://localhost:6080/health')\" || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [lakehouse]
+
+  kyuubi:
+    build: { context: ./images, target: kyuubi }
+    image: iap/kyuubi:1.12.0-spark-3.5.8
+    environment:
+      AWS_ACCESS_KEY_ID: ${ENGINE_S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${ENGINE_S3_SECRET_KEY}
+      AWS_REGION: ${S3_REGION}
+      AWS_EC2_METADATA_DISABLED: "true"
+      KYUUBI_AUTH_DB_USER: ${KYUUBI_AUTH_DB_USER}
+      KYUUBI_AUTH_DB_PASSWORD: ${KYUUBI_AUTH_DB_PASSWORD}
+      KYUUBI_ENGINE_DRIVER_MEMORY: ${KYUUBI_ENGINE_DRIVER_MEMORY}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}   # healthcheck only: the REST API is authenticated like JDBC
+      SPARK_CONF_DIR: /opt/spark/conf
+      HADOOP_CONF_DIR: /opt/hadoop/conf
+    ports:
+      - "10009:10009"   # Thrift binary: jdbc:hive2://localhost:10009/   (Beeline, JDBC, DBeaver, PyHive)
+      - "10099:10099"   # REST API + Web UI
+      - "10019:10019"   # Prometheus metrics
+      - "4050-4053:4050-4053"   # Spark UI of engine 1..4 (spark.ui.port=4050 + auto-increment)
+    volumes:
+      - ./kyuubi/kyuubi-defaults.conf:/opt/kyuubi/conf/kyuubi-defaults.conf:ro
+      - ./kyuubi/kyuubi-env.sh:/opt/kyuubi/conf/kyuubi-env.sh:ro
+      - ./spark/spark-defaults.kyuubi.conf:/opt/spark/conf/spark-defaults.conf:ro
+      - ./spark/log4j2.properties:/opt/spark/conf/log4j2.properties:ro
+      - ./kyuubi/authz/ranger-spark-security.xml:/opt/spark/conf/ranger-spark-security.xml:ro
+      - ./kyuubi/authz/ranger-spark-audit.xml:/opt/spark/conf/ranger-spark-audit.xml:ro
+      - ./hadoop:/opt/hadoop/conf:ro
+      - kyuubi-work:/opt/kyuubi/work
+      - kyuubi-policycache:/opt/kyuubi/policycache
+      - kyuubi-spark-local:/tmp/spark-local
+    depends_on:
+      catalog-init: { condition: service_completed_successfully }
+      ranger-admin-stub: { condition: service_healthy }
+      postgres: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -u admin:$${ADMIN_PASSWORD} http://localhost:10099/api/v1/ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+    networks: [lakehouse]
+
+volumes:
+  kyuubi-work:
+  kyuubi-policycache:
+  kyuubi-spark-local:

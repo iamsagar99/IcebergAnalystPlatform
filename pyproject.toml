@@ -1,0 +1,23 @@
+[project]
+name = "iceberg-analyst-platform"
+version = "0.1.0"
+description = "Trino and Kyuubi serving paths on one Iceberg REST catalog: a runnable POC with tests and benchmarks"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["lakehouse", "conftest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-p no:warnings"
+xfail_strict = false

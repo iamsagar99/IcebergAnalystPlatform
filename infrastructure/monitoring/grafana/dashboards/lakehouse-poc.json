@@ -1,0 +1,341 @@
+{
+ "uid": "lakehouse-poc",
+ "title": "Lakehouse POC: Trino / Kyuubi / Catalog / Storage",
+ "schemaVersion": 39,
+ "version": 1,
+ "editable": true,
+ "refresh": "15s",
+ "time": {
+  "from": "now-1h",
+  "to": "now"
+ },
+ "tags": [
+  "lakehouse",
+  "poc"
+ ],
+ "panels": [
+  {
+   "id": 1,
+   "type": "timeseries",
+   "title": "Trino: running / queued queries",
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 7
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "trino_execution_name_QueryManager_RunningQueries",
+     "legendFormat": "running"
+    },
+    {
+     "refId": "B",
+     "expr": "trino_execution_name_QueryManager_QueuedQueries",
+     "legendFormat": "queued"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "type": "timeseries",
+   "title": "Trino: failed queries (rate, 5m)",
+   "gridPos": {
+    "x": 12,
+    "y": 0,
+    "w": 12,
+    "h": 7
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "rate(trino_execution_name_QueryManager_FailedQueries[5m])",
+     "legendFormat": "failed/s"
+    },
+    {
+     "refId": "B",
+     "expr": "rate(trino_execution_name_QueryManager_UserErrorFailures[5m])",
+     "legendFormat": "user-error failures/s"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "type": "timeseries",
+   "title": "Trino: cluster memory (general pool)",
+   "gridPos": {
+    "x": 0,
+    "y": 7,
+    "w": 12,
+    "h": 7
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes"
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "trino_memory_type_MemoryPool_name_general_ReservedBytes",
+     "legendFormat": "reserved bytes"
+    },
+    {
+     "refId": "B",
+     "expr": "trino_memory_type_MemoryPool_name_general_FreeBytes",
+     "legendFormat": "free bytes"
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "type": "timeseries",
+   "title": "Trino: JVM heap used / GC",
+   "gridPos": {
+    "x": 12,
+    "y": 7,
+    "w": 12,
+    "h": 7
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes"
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "java_lang_type_Memory_HeapMemoryUsage_used",
+     "legendFormat": "heap used"
+    },
+    {
+     "refId": "B",
+     "expr": "rate(java_lang_type_GarbageCollector_name_G1_Young_Generation_CollectionTime[5m])",
+     "legendFormat": "young GC ms/s"
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "type": "timeseries",
+   "title": "Kyuubi: open sessions / running operations",
+   "gridPos": {
+    "x": 0,
+    "y": 14,
+    "w": 12,
+    "h": 7
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "kyuubi_connection_opened",
+     "legendFormat": "connections opened (total)"
+    },
+    {
+     "refId": "B",
+     "expr": "kyuubi_operation_opened",
+     "legendFormat": "operations opened (total)"
+    },
+    {
+     "refId": "C",
+     "expr": "kyuubi_engine_total",
+     "legendFormat": "engines (total started)"
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "type": "timeseries",
+   "title": "Kyuubi: thrift request rate and failures",
+   "gridPos": {
+    "x": 12,
+    "y": 14,
+    "w": 12,
+    "h": 7
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "rate(kyuubi_connection_total[5m])",
+     "legendFormat": "connections/s"
+    },
+    {
+     "refId": "B",
+     "expr": "sum(rate({__name__=~\"kyuubi_operation_failed.*\"}[5m]))",
+     "legendFormat": "operations failed/s"
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "type": "timeseries",
+   "title": "Lakekeeper: HTTP request rate by status",
+   "gridPos": {
+    "x": 0,
+    "y": 21,
+    "w": 12,
+    "h": 7
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (status) (rate(axum_http_requests_total[5m]))",
+     "legendFormat": "{{status}}"
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "type": "timeseries",
+   "title": "Object storage: bucket usage / S3 traffic",
+   "gridPos": {
+    "x": 12,
+    "y": 21,
+    "w": 12,
+    "h": 7
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes"
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "minio_cluster_usage_total_bytes",
+     "legendFormat": "storage used bytes"
+    },
+    {
+     "refId": "B",
+     "expr": "rate(minio_s3_traffic_received_bytes[5m])",
+     "legendFormat": "rx B/s"
+    },
+    {
+     "refId": "C",
+     "expr": "rate(minio_s3_traffic_sent_bytes[5m])",
+     "legendFormat": "tx B/s"
+    }
+   ]
+  }
+ ],
+ "templating": {
+  "list": []
+ },
+ "annotations": {
+  "list": []
+ }
+}

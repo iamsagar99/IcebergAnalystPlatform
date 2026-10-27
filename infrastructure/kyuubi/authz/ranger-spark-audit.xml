@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  [LOCAL] Ranger audit disabled (no Solr / HDFS audit store in the POC); authorization decisions still appear in the
+          engine log (org.apache.kyuubi.plugin.spark.authz) and Kyuubi keeps the per-session operation audit.
+  [PROD]  xasecure.audit.is.enabled=true, xasecure.audit.destination.solr=true, xasecure.audit.destination.solr.urls=...
+          and/or xasecure.audit.destination.hdfs.dir=hdfs://.../ranger/audit so every analyst access is attributable.
+-->
+<configuration>
+  <property>
+    <name>xasecure.audit.is.enabled</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>xasecure.audit.destination.db</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>xasecure.audit.destination.solr</name>
+    <value>false</value>
+  </property>
+</configuration>

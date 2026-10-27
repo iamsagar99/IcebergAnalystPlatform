@@ -1,0 +1,56 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 3 * * 1"   # weekly end-to-end run
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff==0.12.4
+      - run: ruff check . && ruff format --check .
+      - uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: ./scripts
+      - name: validate compose files and JSON
+        run: |
+          cp infrastructure/.env.example infrastructure/.env
+          cd infrastructure
+          docker compose -f docker-compose.yml -f docker-compose.trino.yml -f docker-compose.kyuubi.yml config -q
+          cd ..
+          for f in $(git ls-files '*.json'); do python3 -m json.tool "$f" >/dev/null; done
+      - name: collect tests
+        run: |
+          pip install -r infrastructure/tools/requirements.txt
+          python -m pytest --collect-only -q tests | tail -3
+
+  e2e-trino:
+    if: github.event_name != 'pull_request'
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: free disk space
+        run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android
+      - run: cp infrastructure/.env.example infrastructure/.env
+      - run: scripts/start.sh --engine trino
+      - run: scripts/seed.sh
+      - run: scripts/validate.sh --engine trino
+      - run: scripts/benchmark.sh --engine trino --concurrency "5" --iterations 1 --label ci
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-results
+          path: benchmarks/results/*ci*
+      - if: always()
+        run: scripts/stop.sh --purge

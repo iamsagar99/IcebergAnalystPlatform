@@ -1,0 +1,206 @@
+{
+  "catalogs": [
+    {
+      "group": "admins",
+      "catalog": ".*",
+      "allow": "all"
+    },
+    {
+      "group": "etl",
+      "catalog": "lakehouse",
+      "allow": "all"
+    },
+    {
+      "user": "monitor",
+      "catalog": "system",
+      "allow": "read-only"
+    },
+    {
+      "group": "analysts|restricted_analysts",
+      "catalog": "lakehouse",
+      "allow": "read-only"
+    },
+    {
+      "group": "analysts|restricted_analysts",
+      "catalog": "system",
+      "allow": "read-only"
+    },
+    {
+      "catalog": ".*",
+      "allow": "none"
+    }
+  ],
+  "schemas": [
+    {
+      "group": "admins|etl",
+      "catalog": "lakehouse",
+      "schema": ".*",
+      "owner": true
+    },
+    {
+      "owner": false
+    }
+  ],
+  "tables": [
+    {
+      "group": "admins|etl",
+      "privileges": [
+        "SELECT",
+        "INSERT",
+        "DELETE",
+        "UPDATE",
+        "OWNERSHIP"
+      ]
+    },
+    {
+      "catalog": "lakehouse",
+      "table": ".*\\$.*",
+      "privileges": []
+    },
+    {
+      "group": "analysts",
+      "catalog": "lakehouse",
+      "schema": "silver",
+      "table": "customer_pii",
+      "privileges": []
+    },
+    {
+      "group": "restricted_analysts",
+      "catalog": "lakehouse",
+      "schema": "silver",
+      "table": "customer_pii",
+      "privileges": [
+        "SELECT"
+      ],
+      "filter": "marketing_opt_in = true",
+      "columns": [
+        {
+          "name": "email",
+          "mask": "regexp_replace(email, '^(.)(.*)(@.*)$', '$1***$3')"
+        },
+        {
+          "name": "phone",
+          "mask": "'***-***-' || substr(phone, -4)"
+        },
+        {
+          "name": "national_id",
+          "mask": "'***-**-' || substr(national_id, -4)"
+        },
+        {
+          "name": "date_of_birth",
+          "mask": "date_trunc('year', date_of_birth)"
+        },
+        {
+          "name": "street_address",
+          "allow": false
+        }
+      ]
+    },
+    {
+      "group": "analysts|restricted_analysts",
+      "catalog": "lakehouse",
+      "schema": "gold",
+      "table": ".*",
+      "privileges": [
+        "SELECT"
+      ]
+    },
+    {
+      "group": "analysts|restricted_analysts",
+      "catalog": "lakehouse",
+      "schema": "silver",
+      "table": "transactions|events|customers|stores|product_categories",
+      "privileges": [
+        "SELECT"
+      ]
+    },
+    {
+      "privileges": []
+    }
+  ],
+  "functions": [
+    {
+      "catalog": "lakehouse",
+      "privileges": [
+        "EXECUTE"
+      ]
+    },
+    {
+      "catalog": "system",
+      "privileges": [
+        "EXECUTE",
+        "GRANT_EXECUTE"
+      ]
+    }
+  ],
+  "procedures": [
+    {
+      "group": "admins",
+      "catalog": "lakehouse",
+      "privileges": [
+        "EXECUTE"
+      ]
+    },
+    {
+      "privileges": []
+    }
+  ],
+  "queries": [
+    {
+      "group": "admins",
+      "allow": [
+        "execute",
+        "view",
+        "kill"
+      ]
+    },
+    {
+      "user": "monitor",
+      "allow": [
+        "view"
+      ]
+    },
+    {
+      "allow": [
+        "execute"
+      ]
+    }
+  ],
+  "system_information": [
+    {
+      "user": "admin",
+      "allow": [
+        "read",
+        "write"
+      ]
+    },
+    {
+      "user": "monitor",
+      "allow": [
+        "read"
+      ]
+    }
+  ],
+  "catalog_session_properties": [
+    {
+      "group": "admins",
+      "allow": true
+    },
+    {
+      "allow": false
+    }
+  ],
+  "system_session_properties": [
+    {
+      "group": "admins",
+      "allow": true
+    },
+    {
+      "property": "query_max_memory|query_max_execution_time|query_max_run_time",
+      "allow": true
+    },
+    {
+      "allow": false
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "_comment": "Recorded from a real run of scripts/seed.sh (Spark 3.5.8 / Iceberg 1.11.0) and verified identical on a second full re-seed. If the generator changes, re-record deliberately.",
+  "silver.transactions": {"n": 1000000, "sum_amount": "287866767.34", "sum_qty": 2998315, "distinct_ids": 1000000},
+  "bronze.transactions_raw.duplicate_rows": 5000,
+  "silver.events": {"n": 600000},
+  "silver.customers": {"n": 50500, "opted_in": 33480},
+  "silver.customer_pii": {"n": 50500},
+  "silver.stores": {"n": 200},
+  "silver.product_categories": {"n": 40},
+  "gold.daily_sales_by_store": {"n": 54000},
+  "gold.category_sales_daily": {"n": 3600},
+  "gold.customer_monthly_summary": {"n": 147723},
+  "gold.event_funnel_daily": {"n": 540}
+}

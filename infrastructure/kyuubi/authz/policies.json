@@ -1,0 +1,551 @@
+{
+  "policyVersion": 5,
+  "policies": [
+    {
+      "name": "admins-and-etl: everything",
+      "description": "Platform admins and the ETL service account own all databases, tables and columns in catalog lakehouse.",
+      "resources": {
+        "database": {
+          "values": [
+            "*"
+          ]
+        },
+        "table": {
+          "values": [
+            "*"
+          ]
+        },
+        "column": {
+          "values": [
+            "*"
+          ]
+        }
+      },
+      "policyItems": [
+        {
+          "groups": [
+            "admins",
+            "etl"
+          ],
+          "delegateAdmin": true,
+          "accesses": [
+            {
+              "type": "all",
+              "isAllowed": true
+            },
+            {
+              "type": "select",
+              "isAllowed": true
+            },
+            {
+              "type": "update",
+              "isAllowed": true
+            },
+            {
+              "type": "create",
+              "isAllowed": true
+            },
+            {
+              "type": "drop",
+              "isAllowed": true
+            },
+            {
+              "type": "alter",
+              "isAllowed": true
+            },
+            {
+              "type": "index",
+              "isAllowed": true
+            },
+            {
+              "type": "lock",
+              "isAllowed": true
+            },
+            {
+              "type": "read",
+              "isAllowed": true
+            },
+            {
+              "type": "write",
+              "isAllowed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "admins-and-etl: url (locations)",
+      "resources": {
+        "url": {
+          "values": [
+            "*"
+          ],
+          "isRecursive": true
+        }
+      },
+      "policyItems": [
+        {
+          "groups": [
+            "admins",
+            "etl"
+          ],
+          "delegateAdmin": true,
+          "accesses": [
+            {
+              "type": "all",
+              "isAllowed": true
+            },
+            {
+              "type": "read",
+              "isAllowed": true
+            },
+            {
+              "type": "write",
+              "isAllowed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "analysts: gold marts (read)",
+      "description": "P5: analysts rarely scan silver; gold is the serving layer.",
+      "resources": {
+        "database": {
+          "values": [
+            "gold"
+          ]
+        },
+        "table": {
+          "values": [
+            "*"
+          ]
+        },
+        "column": {
+          "values": [
+            "*"
+          ]
+        }
+      },
+      "policyItems": [
+        {
+          "groups": [
+            "analysts",
+            "restricted_analysts"
+          ],
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "analysts: silver non-PII tables (read)",
+      "description": "customer_pii is deliberately absent -> denied by default (Ranger is allow-list). bronze is absent -> denied.",
+      "resources": {
+        "database": {
+          "values": [
+            "silver"
+          ]
+        },
+        "table": {
+          "values": [
+            "transactions",
+            "events",
+            "customers",
+            "stores",
+            "product_categories"
+          ]
+        },
+        "column": {
+          "values": [
+            "*"
+          ]
+        }
+      },
+      "policyItems": [
+        {
+          "groups": [
+            "analysts",
+            "restricted_analysts"
+          ],
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "restricted analysts: customer_pii (read, masked + filtered)",
+      "resources": {
+        "database": {
+          "values": [
+            "silver"
+          ]
+        },
+        "table": {
+          "values": [
+            "customer_pii"
+          ]
+        },
+        "column": {
+          "values": [
+            "*"
+          ]
+        }
+      },
+      "policyItems": [
+        {
+          "groups": [
+            "restricted_analysts"
+          ],
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "restricted analysts: street_address denied (column-level)",
+      "description": "Explicit deny: even restricted analysts never see the street address.",
+      "resources": {
+        "database": {
+          "values": [
+            "silver"
+          ]
+        },
+        "table": {
+          "values": [
+            "customer_pii"
+          ]
+        },
+        "column": {
+          "values": [
+            "street_address"
+          ]
+        }
+      },
+      "policyItems": [],
+      "denyPolicyItems": [
+        {
+          "groups": [
+            "restricted_analysts",
+            "analysts"
+          ],
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mask: customer_pii.email",
+      "policyType": 1,
+      "resources": {
+        "database": {
+          "values": [
+            "silver"
+          ]
+        },
+        "table": {
+          "values": [
+            "customer_pii"
+          ]
+        },
+        "column": {
+          "values": [
+            "email"
+          ]
+        }
+      },
+      "dataMaskPolicyItems": [
+        {
+          "groups": [
+            "restricted_analysts"
+          ],
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ],
+          "dataMaskInfo": {
+            "dataMaskType": "MASK_SHOW_FIRST_4"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mask: customer_pii.phone",
+      "policyType": 1,
+      "resources": {
+        "database": {
+          "values": [
+            "silver"
+          ]
+        },
+        "table": {
+          "values": [
+            "customer_pii"
+          ]
+        },
+        "column": {
+          "values": [
+            "phone"
+          ]
+        }
+      },
+      "dataMaskPolicyItems": [
+        {
+          "groups": [
+            "restricted_analysts"
+          ],
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ],
+          "dataMaskInfo": {
+            "dataMaskType": "MASK_SHOW_LAST_4"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mask: customer_pii.national_id",
+      "policyType": 1,
+      "resources": {
+        "database": {
+          "values": [
+            "silver"
+          ]
+        },
+        "table": {
+          "values": [
+            "customer_pii"
+          ]
+        },
+        "column": {
+          "values": [
+            "national_id"
+          ]
+        }
+      },
+      "dataMaskPolicyItems": [
+        {
+          "groups": [
+            "restricted_analysts"
+          ],
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ],
+          "dataMaskInfo": {
+            "dataMaskType": "MASK_HASH"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mask: customer_pii.date_of_birth",
+      "policyType": 1,
+      "resources": {
+        "database": {
+          "values": [
+            "silver"
+          ]
+        },
+        "table": {
+          "values": [
+            "customer_pii"
+          ]
+        },
+        "column": {
+          "values": [
+            "date_of_birth"
+          ]
+        }
+      },
+      "dataMaskPolicyItems": [
+        {
+          "groups": [
+            "restricted_analysts"
+          ],
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ],
+          "dataMaskInfo": {
+            "dataMaskType": "MASK_DATE_SHOW_YEAR"
+          }
+        }
+      ]
+    },
+    {
+      "name": "row filter: customer_pii",
+      "description": "restricted analysts: only opted-in customers. analysts: no rows at all (closes the COUNT(*) row-count leak: the AuthZ plugin does not authorize column-less scans; verified on Kyuubi 1.12.0). Filter uses a non-foldable contradiction so the relation is kept and column checks still apply.",
+      "policyType": 2,
+      "resources": {
+        "database": {
+          "values": [
+            "silver"
+          ]
+        },
+        "table": {
+          "values": [
+            "customer_pii"
+          ]
+        }
+      },
+      "rowFilterPolicyItems": [
+        {
+          "groups": [
+            "restricted_analysts"
+          ],
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ],
+          "rowFilterInfo": {
+            "filterExpr": "marketing_opt_in = true"
+          }
+        },
+        {
+          "groups": [
+            "analysts"
+          ],
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ],
+          "rowFilterInfo": {
+            "filterExpr": "customer_id < 0 AND customer_id > 0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "row filter: bronze.transactions_raw hidden from analysts",
+      "description": "bronze is ETL-only; the row filter makes column-less scans (COUNT(*)) return nothing for analysts. Filter uses a non-foldable contradiction so the relation is kept and column checks still apply.",
+      "policyType": 2,
+      "resources": {
+        "database": {
+          "values": [
+            "bronze"
+          ]
+        },
+        "table": {
+          "values": [
+            "transactions_raw"
+          ]
+        }
+      },
+      "rowFilterPolicyItems": [
+        {
+          "groups": [
+            "analysts",
+            "restricted_analysts"
+          ],
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ],
+          "rowFilterInfo": {
+            "filterExpr": "transaction_id < 0 AND transaction_id > 0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "row filter: bronze.events_raw hidden from analysts",
+      "description": "bronze is ETL-only; the row filter makes column-less scans (COUNT(*)) return nothing for analysts. Filter uses a non-foldable contradiction so the relation is kept and column checks still apply.",
+      "policyType": 2,
+      "resources": {
+        "database": {
+          "values": [
+            "bronze"
+          ]
+        },
+        "table": {
+          "values": [
+            "events_raw"
+          ]
+        }
+      },
+      "rowFilterPolicyItems": [
+        {
+          "groups": [
+            "analysts",
+            "restricted_analysts"
+          ],
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ],
+          "rowFilterInfo": {
+            "filterExpr": "event_id < 0 AND event_id > 0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "row filter: bronze.customers_cdc hidden from analysts",
+      "description": "bronze is ETL-only; the row filter makes column-less scans (COUNT(*)) return nothing for analysts. Filter uses a non-foldable contradiction so the relation is kept and column checks still apply.",
+      "policyType": 2,
+      "resources": {
+        "database": {
+          "values": [
+            "bronze"
+          ]
+        },
+        "table": {
+          "values": [
+            "customers_cdc"
+          ]
+        }
+      },
+      "rowFilterPolicyItems": [
+        {
+          "groups": [
+            "analysts",
+            "restricted_analysts"
+          ],
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ],
+          "rowFilterInfo": {
+            "filterExpr": "customer_id < 0 AND customer_id > 0"
+          }
+        }
+      ]
+    }
+  ]
+}

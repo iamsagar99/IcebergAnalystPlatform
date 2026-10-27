@@ -1,0 +1,3 @@
+# The Spark jobs run inside the iap/spark image (PySpark 3.5.8 is provided by the image itself).
+# Nothing else is required at runtime. For local IDE assistance only:
+pyspark==3.5.8

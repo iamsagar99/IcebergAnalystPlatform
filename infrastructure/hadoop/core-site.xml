@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+  Hadoop client configuration shared by the Kyuubi server and every Spark JVM (ETL, Jupyter, Kyuubi engines).
+
+  LOCAL-ONLY: user -> group membership is a static map. Kyuubi (GROUP share level, queue mapping) and the
+  Kyuubi/Ranger AuthZ plugin (group-based policies) both resolve groups through Hadoop's UserGroupInformation.
+  PRODUCTION: replace with hadoop.security.group.mapping = LdapGroupsMapping (or SSSD on the OS) so that the
+  same AD/LDAP groups used by Trino's LDAP/OIDC group provider drive Kyuubi and Ranger.
+-->
+<configuration>
+  <property>
+    <name>hadoop.security.group.mapping</name>
+    <value>org.apache.hadoop.security.JniBasedUnixGroupsMappingWithFallback</value>
+  </property>
+  <property>
+    <name>hadoop.user.group.static.mapping.overrides</name>
+    <value>admin=admins;etl=etl;analyst1=analysts;analyst2=analysts;restricted1=restricted_analysts;bench=analysts;spark=etl;dr.who=</value>
+  </property>
+  <property>
+    <name>fs.s3a.path.style.access</name>
+    <value>true</value>
+  </property>
+</configuration>

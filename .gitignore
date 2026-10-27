@@ -1,0 +1,21 @@
+# project-specific inputs that are not part of the showcase
+Requirements.MD
+
+# local secrets and generated artefacts
+.env
+infrastructure/trino/generated/
+infrastructure/kyuubi/generated/
+infrastructure/monitoring/generated/
+infrastructure/.data/
+**/__pycache__/
+.pytest_cache/
+notebooks/.ipynb_checkpoints/
+benchmarks/results/*.tmp
+*.log
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.venv/
+.idea/
+.vscode/
+.DS_Store

@@ -1,0 +1,232 @@
+# Core platform: object storage, Postgres, Iceberg REST catalog (Lakekeeper), Spark (ETL + Jupyter), monitoring.
+# Engines are overlays:  -f docker-compose.yml -f docker-compose.trino.yml   and/or   -f docker-compose.kyuubi.yml
+# All credentials come from infrastructure/.env (copy of .env.example). Nothing secret is in this file.
+name: ${COMPOSE_PROJECT_NAME:-iap}
+
+x-s3-engine-env: &s3-engine-env
+  # Engine service-account identity for object storage. PROD on HDFS: Kerberos keytab per engine, no keys.
+  AWS_ACCESS_KEY_ID: ${ENGINE_S3_ACCESS_KEY}
+  AWS_SECRET_ACCESS_KEY: ${ENGINE_S3_SECRET_KEY}
+  AWS_REGION: ${S3_REGION}
+  AWS_EC2_METADATA_DISABLED: "true"
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      LAKEKEEPER_DB: ${LAKEKEEPER_DB}
+      KYUUBI_AUTH_DB: ${KYUUBI_AUTH_DB}
+      KYUUBI_AUTH_DB_USER: ${KYUUBI_AUTH_DB_USER}
+      KYUUBI_AUTH_DB_PASSWORD: ${KYUUBI_AUTH_DB_PASSWORD}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ETL_PASSWORD: ${ETL_PASSWORD}
+      ANALYST_PASSWORD: ${ANALYST_PASSWORD}
+      RESTRICTED_PASSWORD: ${RESTRICTED_PASSWORD}
+      BENCH_PASSWORD: ${BENCH_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./catalog/init-postgres.sh:/docker-entrypoint-initdb.d/01-init.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [lakehouse]
+
+  minio:
+    # MinIO-compatible object storage. Upstream minio/minio images were withdrawn from Docker Hub in 2025/26;
+    # pgsty/silo is the maintained fork of the same code base (same `mc` client, same S3 API). See docs/implementation-decisions.md.
+    image: pgsty/silo:RELEASE.2026-09-03T13-18-01Z
+    command: ["silo", "server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${S3_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${S3_ROOT_PASSWORD}
+      MINIO_REGION: ${S3_REGION}
+      MINIO_PROMETHEUS_AUTH_TYPE: public
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # object browser / console
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/minio/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks: [lakehouse]
+
+  minio-init:
+    image: pgsty/silo:RELEASE.2026-09-03T13-18-01Z
+    depends_on:
+      minio: { condition: service_healthy }
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null &&
+        mc mb --ignore-existing "local/$$S3_BUCKET" &&
+        mc ls local
+    environment:
+      MINIO_ROOT_USER: ${S3_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${S3_ROOT_PASSWORD}
+      S3_BUCKET: ${S3_BUCKET}
+    restart: "no"
+    networks: [lakehouse]
+
+  lakekeeper-migrate:
+    image: quay.io/lakekeeper/catalog:v0.14.2
+    command: ["migrate"]
+    environment:
+      LAKEKEEPER__PG_DATABASE_URL_WRITE: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${LAKEKEEPER_DB}
+      LAKEKEEPER__PG_ENCRYPTION_KEY: ${LAKEKEEPER_PG_ENCRYPTION_KEY}
+      RUST_LOG: info
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
+    networks: [lakehouse]
+
+  lakekeeper:
+    image: quay.io/lakekeeper/catalog:v0.14.2
+    command: ["serve"]
+    environment:
+      LAKEKEEPER__PG_DATABASE_URL_WRITE: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${LAKEKEEPER_DB}
+      LAKEKEEPER__PG_DATABASE_URL_READ: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${LAKEKEEPER_DB}
+      LAKEKEEPER__PG_ENCRYPTION_KEY: ${LAKEKEEPER_PG_ENCRYPTION_KEY}
+      LAKEKEEPER__BASE_URI: http://lakekeeper:8181
+      LAKEKEEPER__LISTEN_PORT: "8181"
+      LAKEKEEPER__METRICS__PORT: "9000"
+      # LOCAL-ONLY: no authentication on the catalog API (open network = Docker network only).
+      # PROD: LAKEKEEPER__OPENID_PROVIDER_URI=https://idp/realms/lakehouse  LAKEKEEPER__OPENID_AUDIENCE=lakekeeper
+      #       LAKEKEEPER__AUTHZ_BACKEND=openfga  -> only engine service principals may load tables.
+      RUST_LOG: info
+    ports:
+      - "8181:8181"   # REST catalog + UI
+    depends_on:
+      lakekeeper-migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "/home/nonroot/lakekeeper", "healthcheck"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks: [lakehouse]
+
+  catalog-init:
+    build: { context: ./tools }
+    image: iap/tools:local
+    command: ["python", "/workspace/infrastructure/catalog/bootstrap.py"]
+    environment:
+      LAKEKEEPER_URL: http://lakekeeper:8181
+      LAKEKEEPER_WAREHOUSE: ${LAKEKEEPER_WAREHOUSE}
+      S3_BUCKET: ${S3_BUCKET}
+      S3_REGION: ${S3_REGION}
+      S3_ENDPOINT: http://minio:9000
+      S3_ROOT_USER: ${S3_ROOT_USER}
+      S3_ROOT_PASSWORD: ${S3_ROOT_PASSWORD}
+    volumes:
+      - ..:/workspace:ro
+    depends_on:
+      lakekeeper: { condition: service_healthy }
+      minio-init: { condition: service_completed_successfully }
+    restart: "no"
+    networks: [lakehouse]
+
+  spark:
+    # ETL/seeding Spark (spark-submit via `docker compose exec spark`) + JupyterLab for manual verification.
+    build: { context: ./images, target: spark-base }
+    image: iap/spark:3.5.8-iceberg-1.11.0
+    command:
+      - jupyter
+      - lab
+      - --ip=0.0.0.0
+      - --port=8888
+      - --no-browser
+      - --ServerApp.root_dir=/home/spark/notebooks
+      - --IdentityProvider.token=${JUPYTER_TOKEN}
+    environment:
+      <<: *s3-engine-env
+      SPARK_CONF_DIR: /opt/spark/conf
+      HADOOP_CONF_DIR: /opt/hadoop/conf
+      PYSPARK_PYTHON: python3
+    ports:
+      - "8888:8888"   # JupyterLab
+      - "4040:4040"   # Spark UI of the running ETL / notebook session
+    volumes:
+      - ./spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
+      - ./spark/log4j2.properties:/opt/spark/conf/log4j2.properties:ro
+      - ./hadoop:/opt/hadoop/conf:ro
+      - ../spark:/workspace/spark:ro
+      - ../sql:/workspace/sql:ro
+      - ../notebooks:/home/spark/notebooks
+      - spark-local:/tmp/spark-local
+    depends_on:
+      catalog-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8888/api >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    networks: [lakehouse]
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=7d"]
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/generated:/etc/prometheus/generated:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks: [lakehouse]
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on: [prometheus]
+    networks: [lakehouse]
+
+  tools:
+    # Client toolbox for tests, benchmarks and demos:  docker compose run --rm tools <cmd>
+    build: { context: ./tools }
+    image: iap/tools:local
+    profiles: [tools]
+    working_dir: /workspace
+    environment:
+      TRINO_HOST: trino
+      TRINO_PORT: "8443"
+      KYUUBI_HOST: kyuubi
+      KYUUBI_PORT: "10009"
+      LAKEKEEPER_URL: http://lakekeeper:8181
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: ${S3_BUCKET}
+      S3_REGION: ${S3_REGION}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ANALYST_PASSWORD: ${ANALYST_PASSWORD}
+      RESTRICTED_PASSWORD: ${RESTRICTED_PASSWORD}
+      ETL_PASSWORD: ${ETL_PASSWORD}
+      BENCH_PASSWORD: ${BENCH_PASSWORD}
+      ENGINE_S3_ACCESS_KEY: ${ENGINE_S3_ACCESS_KEY}
+      ENGINE_S3_SECRET_KEY: ${ENGINE_S3_SECRET_KEY}
+    volumes:
+      - ..:/workspace
+    networks: [lakehouse]
+
+volumes:
+  pgdata:
+  miniodata:
+  spark-local:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  lakehouse:
+    name: ${COMPOSE_PROJECT_NAME:-iap}_lakehouse

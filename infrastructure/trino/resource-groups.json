@@ -1,0 +1,111 @@
+{
+  "rootGroups": [
+    {
+      "name": "global",
+      "softMemoryLimit": "80%",
+      "hardConcurrencyLimit": 24,
+      "maxQueued": 200,
+      "schedulingPolicy": "weighted_fair",
+      "jmxExport": true,
+      "subGroups": [
+        {
+          "name": "etl",
+          "softMemoryLimit": "40%",
+          "hardConcurrencyLimit": 4,
+          "maxQueued": 20,
+          "schedulingWeight": 4,
+          "jmxExport": true
+        },
+        {
+          "name": "interactive",
+          "softMemoryLimit": "50%",
+          "hardConcurrencyLimit": 12,
+          "maxQueued": 60,
+          "schedulingWeight": 3,
+          "schedulingPolicy": "fair",
+          "jmxExport": true,
+          "subGroups": [
+            {
+              "name": "user-${USER}",
+              "softMemoryLimit": "15%",
+              "hardConcurrencyLimit": 3,
+              "maxQueued": 10
+            }
+          ]
+        },
+        {
+          "name": "scheduled_reports",
+          "softMemoryLimit": "30%",
+          "hardConcurrencyLimit": 3,
+          "maxQueued": 30,
+          "schedulingWeight": 2,
+          "jmxExport": true
+        },
+        {
+          "name": "adhoc_heavy",
+          "softMemoryLimit": "35%",
+          "hardConcurrencyLimit": 2,
+          "maxQueued": 6,
+          "schedulingWeight": 1,
+          "jmxExport": true
+        },
+        {
+          "name": "bench",
+          "softMemoryLimit": "60%",
+          "hardConcurrencyLimit": 40,
+          "maxQueued": 200,
+          "schedulingWeight": 1,
+          "jmxExport": true
+        }
+      ]
+    },
+    {
+      "name": "admin",
+      "softMemoryLimit": "90%",
+      "hardConcurrencyLimit": 6,
+      "maxQueued": 20,
+      "schedulingPolicy": "query_priority",
+      "jmxExport": true
+    }
+  ],
+  "selectors": [
+    {
+      "userGroup": "admins",
+      "group": "admin"
+    },
+    {
+      "user": "monitor",
+      "group": "admin"
+    },
+    {
+      "user": "etl",
+      "group": "global.etl"
+    },
+    {
+      "userGroup": "etl",
+      "group": "global.etl"
+    },
+    {
+      "user": "bench",
+      "group": "global.bench"
+    },
+    {
+      "source": "scheduled-.*",
+      "group": "global.scheduled_reports"
+    },
+    {
+      "clientTags": [
+        "heavy"
+      ],
+      "group": "global.adhoc_heavy"
+    },
+    {
+      "userGroup": "analysts|restricted_analysts",
+      "group": "global.interactive.user-${USER}"
+    },
+    {
+      "group": "global.interactive.user-${USER}"
+    }
+  ],
+  "cpuQuotaPeriod": "1h"
+}
