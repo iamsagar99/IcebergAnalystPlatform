@@ -14,6 +14,10 @@ extend-exclude = ["notebooks"]
 select = ["E", "F", "W", "I", "B", "UP"]
 ignore = ["E501"]
 
+[tool.ruff.lint.per-file-ignores]
+# auth/access-denial tests intentionally accept whatever error the client library raises
+"tests/**" = ["B017"]
+
 [tool.ruff.lint.isort]
 known-first-party = ["lakehouse", "conftest"]
 

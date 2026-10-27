@@ -7,11 +7,14 @@ silver.customers    : CDC merge (latest op per key; D deletes, U updates, I inse
 silver.customer_pii : same CDC feed, PII columns only (restricted table, P7)
 gold.*              : full rebuild of the serving marts (P5) with INSERT OVERWRITE semantics
 """
+
 from lakehouse import arg_parser, session, sql, timed
 
 
 def merge_transactions(spark, c):
-    sql(spark, f"""
+    sql(
+        spark,
+        f"""
         MERGE INTO {c}.silver.transactions t
         USING (
           SELECT transaction_id, transaction_ts, CAST(transaction_ts AS DATE) AS transaction_date, store_id, customer_id,
@@ -24,11 +27,14 @@ def merge_transactions(spark, c):
         ON t.transaction_id = s.transaction_id
         WHEN MATCHED AND t.status <> s.status THEN UPDATE SET *
         WHEN NOT MATCHED THEN INSERT *
-    """)
+    """,
+    )
 
 
 def merge_events(spark, c):
-    sql(spark, f"""
+    sql(
+        spark,
+        f"""
         MERGE INTO {c}.silver.events t
         USING (
           SELECT event_id, event_ts, CAST(event_ts AS DATE) AS event_date, customer_id, session_id, event_type,
@@ -40,7 +46,8 @@ def merge_events(spark, c):
         ) s
         ON t.event_id = s.event_id
         WHEN NOT MATCHED THEN INSERT *
-    """)
+    """,
+    )
 
 
 CDC_LATEST = """
@@ -52,7 +59,9 @@ CDC_LATEST = """
 
 
 def merge_customers(spark, c):
-    sql(spark, f"""
+    sql(
+        spark,
+        f"""
         MERGE INTO {c}.silver.customers t
         USING (
           SELECT op, op_ts, customer_id, first_name, last_name, segment, country, city, loyalty_tier, signup_date,
@@ -67,8 +76,11 @@ def merge_customers(spark, c):
         WHEN NOT MATCHED AND s.op <> 'D' THEN INSERT
           (customer_id, first_name, last_name, segment, country, city, loyalty_tier, signup_date, marketing_opt_in, updated_at)
           VALUES (s.customer_id, s.first_name, s.last_name, s.segment, s.country, s.city, s.loyalty_tier, s.signup_date, s.marketing_opt_in, s.op_ts)
-    """)
-    sql(spark, f"""
+    """,
+    )
+    sql(
+        spark,
+        f"""
         MERGE INTO {c}.silver.customer_pii t
         USING (
           SELECT op, op_ts, customer_id, email, phone, national_id, date_of_birth, street_address, country, marketing_opt_in
@@ -82,11 +94,14 @@ def merge_customers(spark, c):
         WHEN NOT MATCHED AND s.op <> 'D' THEN INSERT
           (customer_id, email, phone, national_id, date_of_birth, street_address, country, marketing_opt_in, updated_at)
           VALUES (s.customer_id, s.email, s.phone, s.national_id, s.date_of_birth, s.street_address, s.country, s.marketing_opt_in, s.op_ts)
-    """)
+    """,
+    )
 
 
 def build_gold(spark, c):
-    sql(spark, f"""
+    sql(
+        spark,
+        f"""
         INSERT OVERWRITE {c}.gold.daily_sales_by_store
         SELECT t.transaction_date AS sales_date, t.store_id, s.store_name, s.region, t.channel,
                COUNT(*) AS txn_count, SUM(t.quantity) AS units, CAST(SUM(t.amount) AS DECIMAL(18,2)) AS revenue,
@@ -94,24 +109,33 @@ def build_gold(spark, c):
         FROM {c}.silver.transactions t JOIN {c}.silver.stores s ON t.store_id = s.store_id
         WHERE t.status = 'completed'
         GROUP BY t.transaction_date, t.store_id, s.store_name, s.region, t.channel
-    """)
-    sql(spark, f"""
+    """,
+    )
+    sql(
+        spark,
+        f"""
         INSERT OVERWRITE {c}.gold.category_sales_daily
         SELECT t.transaction_date AS sales_date, t.product_category_id AS category_id, p.category_name, p.department,
                COUNT(*) AS txn_count, SUM(t.quantity) AS units, CAST(SUM(t.amount) AS DECIMAL(18,2)) AS revenue
         FROM {c}.silver.transactions t JOIN {c}.silver.product_categories p ON t.product_category_id = p.category_id
         WHERE t.status = 'completed'
         GROUP BY t.transaction_date, t.product_category_id, p.category_name, p.department
-    """)
-    sql(spark, f"""
+    """,
+    )
+    sql(
+        spark,
+        f"""
         INSERT OVERWRITE {c}.gold.customer_monthly_summary
         SELECT CAST(date_trunc('month', t.transaction_date) AS DATE) AS sales_month, t.customer_id, cu.segment, cu.loyalty_tier, cu.country,
                COUNT(*) AS txn_count, CAST(SUM(t.amount) AS DECIMAL(18,2)) AS revenue, MAX(t.transaction_date) AS last_purchase_date
         FROM {c}.silver.transactions t JOIN {c}.silver.customers cu ON t.customer_id = cu.customer_id
         WHERE t.status = 'completed'
         GROUP BY date_trunc('month', t.transaction_date), t.customer_id, cu.segment, cu.loyalty_tier, cu.country
-    """)
-    sql(spark, f"""
+    """,
+    )
+    sql(
+        spark,
+        f"""
         INSERT OVERWRITE {c}.gold.event_funnel_daily
         SELECT event_date, channel, device,
                COUNT(DISTINCT session_id) AS sessions,
@@ -122,7 +146,8 @@ def build_gold(spark, c):
                SUM(CASE WHEN event_type = 'purchase'    THEN 1 ELSE 0 END) AS purchases
         FROM {c}.silver.events
         GROUP BY event_date, channel, device
-    """)
+    """,
+    )
 
 
 def main():
@@ -139,16 +164,37 @@ def main():
         build_gold(spark, c)
 
     print("\n== row counts (current snapshot) ==")
-    for t in ["silver.transactions", "silver.events", "silver.customers", "silver.customer_pii", "silver.stores",
-              "silver.product_categories", "gold.daily_sales_by_store", "gold.category_sales_daily",
-              "gold.customer_monthly_summary", "gold.event_funnel_daily"]:
+    for t in [
+        "silver.transactions",
+        "silver.events",
+        "silver.customers",
+        "silver.customer_pii",
+        "silver.stores",
+        "silver.product_categories",
+        "gold.daily_sales_by_store",
+        "gold.category_sales_daily",
+        "gold.customer_monthly_summary",
+        "gold.event_funnel_daily",
+    ]:
         print(f"{t:35s} {spark.table(f'{c}.{t}').count():>10}")
     print("\n== checksums ==")
-    sql(spark, f"SELECT COUNT(*) AS n, SUM(amount) AS sum_amount, SUM(quantity) AS sum_qty FROM {c}.silver.transactions", show=True)
-    sql(spark, f"SELECT COUNT(*) AS n, SUM(CASE WHEN marketing_opt_in THEN 1 ELSE 0 END) AS opted_in FROM {c}.silver.customer_pii", show=True)
+    sql(
+        spark,
+        f"SELECT COUNT(*) AS n, SUM(amount) AS sum_amount, SUM(quantity) AS sum_qty FROM {c}.silver.transactions",
+        show=True,
+    )
+    sql(
+        spark,
+        f"SELECT COUNT(*) AS n, SUM(CASE WHEN marketing_opt_in THEN 1 ELSE 0 END) AS opted_in FROM {c}.silver.customer_pii",
+        show=True,
+    )
     print("\n== snapshots per table ==")
     for t in ["silver.transactions", "silver.customers", "gold.daily_sales_by_store"]:
-        sql(spark, f"SELECT '{t}' AS tbl, snapshot_id, committed_at, operation FROM {c}.{t}.snapshots ORDER BY committed_at", show=True)
+        sql(
+            spark,
+            f"SELECT '{t}' AS tbl, snapshot_id, committed_at, operation FROM {c}.{t}.snapshots ORDER BY committed_at",
+            show=True,
+        )
 
 
 if __name__ == "__main__":

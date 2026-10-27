@@ -5,6 +5,7 @@ Spark is the metadata OWNER for all tables: Trino and Kyuubi only read what is c
 Partitioning, file-size and snapshot-retention properties implement P9/P4/P10 decisions
 (see docs/problem-analysis.md). Run with --reset to drop everything first (reproducible seed).
 """
+
 from lakehouse import NAMESPACES, arg_parser, session, sql
 
 # Iceberg table properties shared by every table. LOCAL file sizes are far below the target because the

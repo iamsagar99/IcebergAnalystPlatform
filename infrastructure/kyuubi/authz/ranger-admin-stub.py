@@ -8,6 +8,7 @@ Ranger Admin. We serve a ServicePolicies document assembled from:
 Production replaces this process with Ranger Admin (apache/ranger:2.8.0); nothing changes on the engine side
 except ranger.plugin.spark.policy.rest.url. No authentication is implemented here on purpose: it is a stub.
 """
+
 import argparse
 import json
 import os
@@ -22,6 +23,7 @@ def load_service_policies():
     with open(ARGS.servicedef) as f:
         servicedef = json.load(f)
     servicedef.pop("_source", None)
+
     # Ranger's shaded Jackson expects ISO-8601 dates; the Ranger-UI export format ("20190401-20:14:36.000-+0800") is not
     # parseable, so timestamps are dropped recursively (they carry no authorization meaning).
     def strip_dates(o):
@@ -30,6 +32,7 @@ def load_service_policies():
         if isinstance(o, list):
             return [strip_dates(x) for x in o]
         return o
+
     servicedef = strip_dates(servicedef)
     with open(ARGS.policies) as f:
         doc = json.load(f)
@@ -86,8 +89,15 @@ class Handler(BaseHTTPRequestHandler):
                 return
             return self._json(200, sp)
         if "/roles/download/" in u.path:
-            return self._json(200, {"serviceName": ARGS.service, "roleVersion": 1,
-                                    "roleUpdateTime": int(time.time() * 1000), "rangerRoles": []})
+            return self._json(
+                200,
+                {
+                    "serviceName": ARGS.service,
+                    "roleVersion": 1,
+                    "roleUpdateTime": int(time.time() * 1000),
+                    "rangerRoles": [],
+                },
+            )
         if "/tags/download/" in u.path or "/xusers/download/" in u.path or "/userstore/download/" in u.path:
             self.send_response(304)
             self.end_headers()
@@ -117,7 +127,10 @@ def main():
     ap.add_argument("--service", default="lakehouse_hive")
     ARGS = ap.parse_args()
     load_service_policies()  # fail fast on malformed JSON
-    print(f"[ranger-admin-stub] serving policies for service '{ARGS.service}' on :{ARGS.port} (SIMULATION, not Ranger Admin)", flush=True)
+    print(
+        f"[ranger-admin-stub] serving policies for service '{ARGS.service}' on :{ARGS.port} (SIMULATION, not Ranger Admin)",
+        flush=True,
+    )
     ThreadingHTTPServer(("0.0.0.0", ARGS.port), Handler).serve_forever()
 
 

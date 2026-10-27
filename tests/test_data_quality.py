@@ -1,5 +1,6 @@
 """Seed reproducibility and data-quality checks, run through BOTH engines (the numbers must agree with
 tests/expected.json, which was recorded from a real seed run and re-verified after a full re-seed)."""
+
 from decimal import Decimal
 
 import pytest
@@ -30,7 +31,10 @@ def test_transactions_checksum(admin, validation_queries, expected):
 
 def test_silver_has_no_duplicates_but_bronze_does(admin, validation_queries, expected):
     assert one(admin.query(validation_queries["v_no_duplicates_in_silver"]))[0] == 0
-    assert one(admin.query(validation_queries["v_bronze_has_duplicates"]))[0] == expected["bronze.transactions_raw.duplicate_rows"]
+    assert (
+        one(admin.query(validation_queries["v_bronze_has_duplicates"]))[0]
+        == expected["bronze.transactions_raw.duplicate_rows"]
+    )
 
 
 def test_events_count(admin, validation_queries, expected):
@@ -60,6 +64,8 @@ def test_gold_consistent_with_silver(admin, validation_queries, expected):
     assert Decimal(str(gold_revenue)) == Decimal(str(silver_revenue))
 
 
-@pytest.mark.parametrize("table", ["gold.category_sales_daily", "gold.customer_monthly_summary", "gold.event_funnel_daily"])
+@pytest.mark.parametrize(
+    "table", ["gold.category_sales_daily", "gold.customer_monthly_summary", "gold.event_funnel_daily"]
+)
 def test_gold_row_counts(admin, expected, table):
     assert one(admin.query(f"SELECT COUNT(*) FROM lakehouse.{table}"))[0] == expected[table]["n"]

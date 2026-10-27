@@ -1,4 +1,7 @@
 # shared helpers for scripts/*.sh
+# shellcheck shell=bash
+# COMPOSE_FILES / ENGINES are consumed by the scripts that source this file
+# shellcheck disable=SC2034
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 INFRA="$ROOT/infrastructure"
@@ -7,7 +10,10 @@ if [[ ! -f .env ]]; then
   echo "infrastructure/.env not found -> creating it from .env.example (LOCAL demo credentials)"
   cp .env.example .env
 fi
-set -a; source .env; set +a
+set -a
+# shellcheck disable=SC1091
+source .env
+set +a
 
 CORE=(-f docker-compose.yml)
 TRINO=(-f docker-compose.trino.yml)

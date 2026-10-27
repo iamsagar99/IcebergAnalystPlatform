@@ -6,6 +6,7 @@ Storage profile decisions (see docs/security-model.md):
   * sts-enabled=false and remote-signing-enabled=false  -> the catalog NEVER hands out storage credentials.
     Every engine must bring its own storage identity (service account), exactly like Kerberos on HDFS.
 """
+
 import json
 import os
 import sys

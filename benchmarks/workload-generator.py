@@ -7,11 +7,11 @@ Each worker is one analyst session (user 'bench', Trino source 'bench-<i>'), run
 sql/sample_queries.sql in a loop. Captured per query: latency, rows, error. Output: JSON + Markdown summary under
 benchmarks/results/ (only real runs are committed there). Runs inside the tools container (scripts/benchmark.sh).
 """
+
 import argparse
 import datetime as dt
 import json
 import os
-import re
 import statistics
 import sys
 import threading
@@ -40,12 +40,27 @@ def make_client(engine, worker):
     if engine == "trino":
         import trino
         from trino.auth import BasicAuthentication
-        return trino.dbapi.connect(host=os.environ.get("TRINO_HOST", "trino"), port=int(os.environ.get("TRINO_PORT", "8443")),
-                                   user=user, auth=BasicAuthentication(user, pw), http_scheme="https", verify=False, catalog="lakehouse",
-                                   source=f"bench-{worker}")
+
+        return trino.dbapi.connect(
+            host=os.environ.get("TRINO_HOST", "trino"),
+            port=int(os.environ.get("TRINO_PORT", "8443")),
+            user=user,
+            auth=BasicAuthentication(user, pw),
+            http_scheme="https",
+            verify=False,
+            catalog="lakehouse",
+            source=f"bench-{worker}",
+        )
     from pyhive import hive
-    return hive.connect(host=os.environ.get("KYUUBI_HOST", "kyuubi"), port=int(os.environ.get("KYUUBI_PORT", "10009")),
-                        username=user, password=pw, auth="CUSTOM", database="gold")
+
+    return hive.connect(
+        host=os.environ.get("KYUUBI_HOST", "kyuubi"),
+        port=int(os.environ.get("KYUUBI_PORT", "10009")),
+        username=user,
+        password=pw,
+        auth="CUSTOM",
+        database="gold",
+    )
 
 
 def worker(engine, wid, queries, plan, results, stop_at, lock):
@@ -54,7 +69,9 @@ def worker(engine, wid, queries, plan, results, stop_at, lock):
         conn = make_client(engine, wid)
     except Exception as e:  # connection failure is a result too
         with lock:
-            results.append({"worker": wid, "query": "connect", "ok": False, "latency_s": time.time() - t0, "error": str(e)[:300]})
+            results.append(
+                {"worker": wid, "query": "connect", "ok": False, "latency_s": time.time() - t0, "error": str(e)[:300]}
+            )
         return
     with lock:
         results.append({"worker": wid, "query": "connect", "ok": True, "latency_s": time.time() - t0, "rows": 0})
@@ -105,9 +122,11 @@ def main():
     plan = [q for q, w in MIX.items() for _ in range(w)] * a.iterations
     results, lock = [], threading.Lock()
     stop_at = time.time() + a.duration
-    started = dt.datetime.now(dt.timezone.utc)
-    threads = [threading.Thread(target=worker, args=(a.engine, i, queries, plan, results, stop_at, lock), daemon=True)
-               for i in range(a.concurrency)]
+    started = dt.datetime.now(dt.UTC)
+    threads = [
+        threading.Thread(target=worker, args=(a.engine, i, queries, plan, results, stop_at, lock), daemon=True)
+        for i in range(a.concurrency)
+    ]
     t0 = time.time()
     for th in threads:
         th.start()
@@ -123,15 +142,30 @@ def main():
         lat = [r["latency_s"] for r in qres if r["query"] == name and r["ok"]]
         err = sum(1 for r in qres if r["query"] == name and not r["ok"])
         if lat or err:
-            per_query[name] = {"n": len(lat), "errors": err, "p50_s": pct(lat, 50), "p95_s": pct(lat, 95), "max_s": max(lat) if lat else None}
+            per_query[name] = {
+                "n": len(lat),
+                "errors": err,
+                "p50_s": pct(lat, 50),
+                "p95_s": pct(lat, 95),
+                "max_s": max(lat) if lat else None,
+            }
     summary = {
-        "engine": a.engine, "concurrency": a.concurrency, "iterations": a.iterations, "label": a.label,
-        "started_utc": started.isoformat(), "wall_s": round(wall, 2),
-        "queries_total": len(qres), "queries_ok": len(ok), "queries_failed": len(qres) - len(ok),
+        "engine": a.engine,
+        "concurrency": a.concurrency,
+        "iterations": a.iterations,
+        "label": a.label,
+        "started_utc": started.isoformat(),
+        "wall_s": round(wall, 2),
+        "queries_total": len(qres),
+        "queries_ok": len(ok),
+        "queries_failed": len(qres) - len(ok),
         "throughput_qps": round(len(ok) / wall, 3) if wall else None,
-        "latency_p50_s": pct(ok, 50), "latency_p95_s": pct(ok, 95), "latency_max_s": max(ok) if ok else None,
+        "latency_p50_s": pct(ok, 50),
+        "latency_p95_s": pct(ok, 95),
+        "latency_max_s": max(ok) if ok else None,
         "latency_mean_s": statistics.fmean(ok) if ok else None,
-        "connect_p95_s": pct([c["latency_s"] for c in conn if c["ok"]], 95), "connect_failed": sum(1 for c in conn if not c["ok"]),
+        "connect_p95_s": pct([c["latency_s"] for c in conn if c["ok"]], 95),
+        "connect_failed": sum(1 for c in conn if not c["ok"]),
         "per_query": per_query,
         "errors": sorted({r.get("error", "") for r in qres if not r["ok"]})[:10],
     }
@@ -139,12 +173,21 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     stem = f"{started.strftime('%Y%m%d-%H%M%S')}-{a.engine}-c{a.concurrency}{('-' + a.label) if a.label else ''}"
     (out / f"{stem}.json").write_text(json.dumps({"summary": summary, "results": results}, indent=1, default=str))
-    md = [f"# {a.engine} @ concurrency {a.concurrency} ({started.strftime('%Y-%m-%d %H:%M UTC')})", "",
-          f"wall {wall:.1f}s | queries ok/failed {len(ok)}/{len(qres) - len(ok)} | throughput {summary['throughput_qps']} q/s | "
-          f"p50 {summary['latency_p50_s']:.2f}s | p95 {summary['latency_p95_s']:.2f}s | max {summary['latency_max_s']:.2f}s | connect p95 {summary['connect_p95_s']}s" if ok else f"wall {wall:.1f}s | ALL {len(qres)} QUERIES FAILED",
-          "", "| query | n | errors | p50 s | p95 s | max s |", "|---|---|---|---|---|---|"]
+    md = [
+        f"# {a.engine} @ concurrency {a.concurrency} ({started.strftime('%Y-%m-%d %H:%M UTC')})",
+        "",
+        f"wall {wall:.1f}s | queries ok/failed {len(ok)}/{len(qres) - len(ok)} | throughput {summary['throughput_qps']} q/s | "
+        f"p50 {summary['latency_p50_s']:.2f}s | p95 {summary['latency_p95_s']:.2f}s | max {summary['latency_max_s']:.2f}s | connect p95 {summary['connect_p95_s']}s"
+        if ok
+        else f"wall {wall:.1f}s | ALL {len(qres)} QUERIES FAILED",
+        "",
+        "| query | n | errors | p50 s | p95 s | max s |",
+        "|---|---|---|---|---|---|",
+    ]
     for q, s in per_query.items():
-        md.append(f"| {q} | {s['n']} | {s['errors']} | {s['p50_s'] and round(s['p50_s'], 2)} | {s['p95_s'] and round(s['p95_s'], 2)} | {s['max_s'] and round(s['max_s'], 2)} |")
+        md.append(
+            f"| {q} | {s['n']} | {s['errors']} | {s['p50_s'] and round(s['p50_s'], 2)} | {s['p95_s'] and round(s['p95_s'], 2)} | {s['max_s'] and round(s['max_s'], 2)} |"
+        )
     if summary["errors"]:
         md += ["", "errors:", *[f"- `{e}`" for e in summary["errors"]]]
     (out / f"{stem}.md").write_text("\n".join(md) + "\n")

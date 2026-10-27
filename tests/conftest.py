@@ -3,6 +3,7 @@
 Runs inside the tools container (docker compose run --rm tools pytest ...). Host names / passwords come from the
 container environment (infrastructure/.env). Tests never mark anything as passed without executing it.
 """
+
 import json
 import os
 import re
@@ -65,14 +66,22 @@ class TrinoClient:
     def __init__(self, user, password):
         import trino
         from trino.auth import BasicAuthentication
+
         self.conn = trino.dbapi.connect(
-            host=os.environ.get("TRINO_HOST", "trino"), port=int(os.environ.get("TRINO_PORT", "8443")),
-            user=user, auth=BasicAuthentication(user, password), http_scheme="https", verify=False, catalog="lakehouse",
-            source="pytest")
+            host=os.environ.get("TRINO_HOST", "trino"),
+            port=int(os.environ.get("TRINO_PORT", "8443")),
+            user=user,
+            auth=BasicAuthentication(user, password),
+            http_scheme="https",
+            verify=False,
+            catalog="lakehouse",
+            source="pytest",
+        )
         self.user = user
 
     def query(self, sql):
         from trino.exceptions import TrinoUserError
+
         cur = self.conn.cursor()
         try:
             cur.execute(sql)
@@ -91,14 +100,21 @@ class KyuubiClient:
 
     def __init__(self, user, password, conf=None):
         from pyhive import hive
+
         self.conn = hive.connect(
-            host=os.environ.get("KYUUBI_HOST", "kyuubi"), port=int(os.environ.get("KYUUBI_PORT", "10009")),
-            username=user, password=password, auth="CUSTOM", database="gold",  # PyHive issues USE <db>; lakehouse has no "default"
-            configuration=conf or {})
+            host=os.environ.get("KYUUBI_HOST", "kyuubi"),
+            port=int(os.environ.get("KYUUBI_PORT", "10009")),
+            username=user,
+            password=password,
+            auth="CUSTOM",
+            database="gold",  # PyHive issues USE <db>; lakehouse has no "default"
+            configuration=conf or {},
+        )
         self.user = user
 
     def query(self, sql):
         from pyhive.exc import OperationalError
+
         cur = self.conn.cursor()
         try:
             cur.execute(sql)
@@ -126,8 +142,7 @@ def connect(engine, role, conf=None):
 
 
 def pytest_addoption(parser):
-    parser.addoption("--engine", action="store", default=os.environ.get("ENGINE", "both"),
-                     help="trino | kyuubi | both")
+    parser.addoption("--engine", action="store", default=os.environ.get("ENGINE", "both"), help="trino | kyuubi | both")
 
 
 def selected_engines(config):
