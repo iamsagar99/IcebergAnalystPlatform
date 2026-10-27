@@ -2,6 +2,7 @@
 # Start the platform.   scripts/start.sh --engine trino|kyuubi|both|core   [--no-build]
 # core  = storage + postgres + catalog + spark/jupyter + monitoring (always started)
 # Memory: core ≈ 2.5 GB, Trino ≈ 2.5 GB, Kyuubi server + 2 engines ≈ 3 GB. Give Docker ≥ 8 GB for one engine, ≥ 11 GB for both.
+# shellcheck source-path=SCRIPTDIR
 source "$(dirname "${BASH_SOURCE[0]}")/_lib.sh"
 ENGINE=both; BUILD=1
 while [[ $# -gt 0 ]]; do case "$1" in --engine) ENGINE="$2"; shift 2;; --no-build) BUILD=0; shift;; *) echo "unknown arg $1"; exit 2;; esac; done

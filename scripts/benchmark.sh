@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Low-concurrency benchmark on each running engine.  scripts/benchmark.sh [--engine trino|kyuubi|both] [--concurrency "5 10"] [--iterations 2]
 # Results (real runs only) land in benchmarks/results/<timestamp>-<engine>-c<N>.{json,md}
+# shellcheck source-path=SCRIPTDIR
 source "$(dirname "${BASH_SOURCE[0]}")/_lib.sh"
 ENGINE=both; CONC="5 10"; ITER=2; LABEL=""
 while [[ $# -gt 0 ]]; do case "$1" in

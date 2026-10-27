@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Seed the warehouse deterministically:  scripts/seed.sh [--no-reset]
 #   1. create namespaces/tables (drop + recreate unless --no-reset)   2. generate bronze data   3. bronze->silver (CDC)->gold
+# shellcheck source-path=SCRIPTDIR
 source "$(dirname "${BASH_SOURCE[0]}")/_lib.sh"
 parse_engine core
 RESET="--reset"; [[ "${1:-}" == "--no-reset" ]] && RESET=""

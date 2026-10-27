@@ -3,6 +3,7 @@
 # Proves: infrastructure up, Spark wrote Iceberg via the catalog, engines discover + query tables, sample queries agree
 # with recorded expectations, current-state reads, role restrictions on each engine, reproducible seed.
 # Nothing is marked passed unless pytest actually executed it (exit code is pytest's).
+# shellcheck source-path=SCRIPTDIR
 source "$(dirname "${BASH_SOURCE[0]}")/_lib.sh"
 ENGINE=both
 while [[ $# -gt 0 ]]; do case "$1" in --engine) ENGINE="$2"; shift 2;; *) echo "unknown arg $1"; exit 2;; esac; done

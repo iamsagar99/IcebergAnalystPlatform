@@ -19,6 +19,8 @@ jobs:
       - run: pip install ruff==0.12.4
       - run: ruff check . && ruff format --check .
       - uses: ludeeus/action-shellcheck@2.0.0
+        env:
+          SHELLCHECK_OPTS: -x   # follow sourced _lib.sh (scripts carry source-path=SCRIPTDIR)
         with:
           scandir: ./scripts
       - name: validate compose files and JSON

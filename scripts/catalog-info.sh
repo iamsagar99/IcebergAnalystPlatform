@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Show namespaces, tables, snapshot counts and the current snapshot id straight from the REST catalog (engine-independent).
+# shellcheck source-path=SCRIPTDIR
 source "$(dirname "${BASH_SOURCE[0]}")/_lib.sh"
 dc run --rm --no-deps -T tools python - <<'PY'
 import json, os, urllib.request
